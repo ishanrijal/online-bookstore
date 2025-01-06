@@ -1,0 +1,25 @@
+.banner-image
+    position: relative
+    
+    img
+        z-index: 2
+        position: relative
+        width: 100%
+    &::before
+        position: absolute
+        z-index: 1
+        width: 100%
+        height: calc(100% - 130px)
+        content: ""
+        left: 0
+        bottom: 0
+        background: linear-gradient(145deg, #1e2024, #23272b)
+        box-shadow: 10px 10px 19px #1c1e22, -10px -10px 19px #262a2e
+        border-radius: 6px
+
+.text-hightlight
+    color: #ff014f
+
+.social-icon
+    background: linear-gradient(145deg, #1e2024, #23272b)
+    box-shadow: 10px 10px 19px #1c1e22, -10px -10px 19px #262a2e
