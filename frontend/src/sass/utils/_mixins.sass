@@ -1,7 +1,34 @@
+// Basic flex mixins
+@mixin flex($direction: row)
+  display: flex
+  flex-direction: $direction
+
 @mixin flex-center
   display: flex
   justify-content: center
   align-items: center
 
+@mixin flex-between
+  display: flex
+  justify-content: space-between
+  align-items: center
+
+@mixin flex-around
+  display: flex
+  justify-content: space-around
+  align-items: center
+
+@mixin flex-column
+  display: flex
+  flex-direction: column
+
+@mixin flex-row
+  display: flex
+  flex-direction: row
+
+@mixin flex-wrap
+  flex-wrap: wrap
+
+// Existing transition mixin
 @mixin transition($property, $duration:0.3s)
-    transition: $property $duration
+  transition: $property $duration

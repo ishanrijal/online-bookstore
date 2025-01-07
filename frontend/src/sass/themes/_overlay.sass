@@ -1,0 +1,111 @@
+@use '../utils/all' as *
+
+.modal-overlay
+  position: fixed
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  background-color: rgba(0, 0, 0, 0.5)
+  @include flex-center
+  z-index: 1000
+  animation: overlayFadeIn 0.3s ease-out
+
+.modal
+  padding: 2rem 3rem
+  border-radius: 16px
+  position: relative
+  width: 100%
+  max-width: 500px
+  background: rgba(255, 255, 255, 0.1)
+  border: 1px solid rgba(255, 255, 255, 0.2)
+  backdrop-filter: blur(12px)
+  -webkit-backdrop-filter: blur(12px)
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1)
+  transform: translateY(0)
+  animation: modalFadeIn 0.3s ease-out
+  
+  &::before
+    content: ""
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    border-radius: 16px
+    padding: 2px
+    background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.5))
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)
+    -webkit-mask-composite: xor
+    mask-composite: exclude
+    pointer-events: none
+
+  input::placeholder
+    color: rgba(255, 255, 255, 0.8)
+    font-size: 0.9rem
+    font-weight: 400
+    letter-spacing: 0.5px
+
+.close-button
+  position: absolute
+  top: 1rem
+  right: 1rem
+  background: transparent
+  border: none
+  width: 32px
+  height: 32px
+  font-size: 1.5rem
+  color: rgba(255, 255, 255, 0.8)
+  cursor: pointer
+  transition: all 0.3s ease
+  
+  &:hover
+    background: rgba(255, 255, 255, 0.1)
+    border-radius: 8px
+    padding: 0.5rem
+    color: #fff
+
+@keyframes overlayFadeIn
+  from
+    opacity: 0
+  to
+    opacity: 1
+
+@keyframes modalFadeIn
+  from
+    opacity: 0
+    transform: translateY(-20px)
+  to
+    opacity: 1
+    transform: translateY(0)
+
+// Responsive Design
+@media (max-width: 768px)
+  .modal
+    max-width: 90%
+    margin: 1rem
+    padding: 2rem
+
+@media (max-width: 480px)
+  .modal
+    padding: 1.5rem
+    margin: 1rem
+    
+  .close-button
+    width: 28px
+    height: 28px
+    font-size: 1rem
+
+// Loading State
+.modal--loading
+  &::after
+    content: ''
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    background: rgba(255, 255, 255, 0.1)
+    backdrop-filter: blur(4px)
+    border-radius: 16px
+    @include flex-center
