@@ -1,0 +1,48 @@
+@use '../utils/all' as *
+
+.footer-wrapper
+  background-color: #333
+  color: #fff
+  padding: 40px 0 20px
+  margin-top: auto
+  width: 100%
+  position: absolute
+  bottom: 0
+
+  .footer-top
+    @include flex-between
+    gap: 40px
+
+    .footer-left, .footer-center, .footer-right
+      @include flex-column
+      gap: 15px
+
+      h2, h3
+        color: #fff
+        margin-bottom: 10px
+
+      ul
+        list-style: none
+        padding: 0
+
+        li a
+          color: #fff
+          text-decoration: none
+          line-height: 1.8
+          transition: color 0.3s
+
+          &:hover
+            color: #007BFF
+
+  .footer-bottom
+    text-align: center
+    margin-top: 30px
+    padding-top: 20px
+    border-top: 1px solid rgba(255,255,255,0.1)
+
+    a
+      color: #fff
+      text-decoration: none
+
+      &:hover
+        color: #007BFF

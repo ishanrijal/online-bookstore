@@ -1,0 +1,121 @@
+@use '../utils/all' as *
+
+.signup-page
+  min-height: 100vh
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)
+  padding: 4rem 0
+
+.signup-wrapper
+  max-width: 500px
+  margin: 0 auto
+  background: rgba(255, 255, 255, 0.1)
+  backdrop-filter: blur(12px)
+  border: 1px solid rgba(255, 255, 255, 0.2)
+  border-radius: 16px
+  padding: 2.5rem
+  color: #fff
+
+  h2
+    font-size: 2rem
+    margin-bottom: 0.5rem
+    text-align: center
+
+  .subtitle
+    text-align: center
+    color: rgba(255, 255, 255, 0.8)
+    margin-bottom: 2rem
+
+  .input-field
+    position: relative
+    margin-bottom: 1.5rem
+
+    input, select
+      width: 100%
+      padding: 0.8rem
+      background: rgba(255, 255, 255, 0.1)
+      border: 1px solid rgba(255, 255, 255, 0.2)
+      border-radius: 8px
+      color: #fff
+      font-size: 1rem
+      transition: all 0.3s ease
+
+      &:focus
+        outline: none
+        border-color: rgba(255, 255, 255, 0.5)
+        background: rgba(255, 255, 255, 0.15)
+
+      &::placeholder
+        color: rgba(255, 255, 255, 0.6)
+
+    select
+      option
+        background: #2a5298
+        color: #fff
+
+    label
+      position: absolute
+      left: 1rem
+      top: 50%
+      transform: translateY(-50%)
+      color: rgba(255, 255, 255, 0.8)
+      transition: all 0.3s ease
+      pointer-events: none
+
+    input:focus ~ label,
+    input:valid ~ label,
+    select:focus ~ label,
+    select:valid ~ label
+      top: -0.5rem
+      left: 0.5rem
+      font-size: 0.8rem
+      background: rgba(42, 82, 152, 0.8)
+      padding: 0 0.5rem
+      border-radius: 4px
+
+  .terms
+    display: flex
+    align-items: center
+    gap: 0.5rem
+    margin: 1.5rem 0
+    
+    input[type="checkbox"]
+      width: auto
+
+  button
+    width: 100%
+    padding: 1rem
+    background: rgba(255, 255, 255, 0.2)
+    border: 1px solid rgba(255, 255, 255, 0.3)
+    border-radius: 8px
+    color: #fff
+    font-size: 1rem
+    cursor: pointer
+    transition: all 0.3s ease
+
+    &:hover
+      background: rgba(255, 255, 255, 0.3)
+      transform: translateY(-2px)
+
+  .login-link
+    text-align: center
+    margin-top: 1.5rem
+
+    a
+      color: #fff
+      text-decoration: underline
+      transition: opacity 0.3s
+
+      &:hover
+        opacity: 0.8
+
+@media (max-width: 768px)
+  .signup-wrapper
+    margin: 0 1rem
+    padding: 2rem
+
+@media (max-width: 480px)
+  .signup-wrapper
+    padding: 1.5rem
+
+    h2
+      font-size: 1.5rem

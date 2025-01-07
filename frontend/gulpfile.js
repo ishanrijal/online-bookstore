@@ -25,8 +25,14 @@ function compileSassDev() {
 function watchFiles() {
     browserSync.init({
         server: {
-        baseDir: "./",
+            baseDir: "./",
         },
+        open: false,
+        port: 3001,
+        notify: false,
+        ui: {
+            port: 3002
+        }
     });
           
     gulp.watch(paths.sass, compileSassDev); // Watch SASS/SCSS files
