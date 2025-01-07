@@ -1,0 +1,7 @@
+.DS_STORE
+.idea/
+.vscode/
+node_modules
+/.changelog
+.npm/
+yarn.lock
