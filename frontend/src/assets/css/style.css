@@ -12,6 +12,25 @@ a:hover {
   color: #f91942;
 }
 
+button {
+  background: #fff;
+  color: #000;
+  font-weight: 600;
+  border: none;
+  padding: 12px 20px;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 16px;
+  border: 2px solid transparent;
+  transition: 0.3s ease;
+}
+
+button:hover {
+  color: #fff;
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
 /* Helper utility classes */
 .hidden {
   display: none !important;
@@ -255,25 +274,21 @@ body {
   padding: 30px;
   text-align: center;
 }
-
-form {
+.form-wrapper form {
   display: flex;
   flex-direction: column;
 }
-
-h2 {
+.form-wrapper form h2 {
   font-size: 2rem;
   margin-bottom: 20px;
   color: #fff;
 }
-
-.input-field {
+.form-wrapper form .input-field {
   position: relative;
   border-bottom: 2px solid #ccc;
   margin: 15px 0;
 }
-
-.input-field label {
+.form-wrapper form .input-field label {
   position: absolute;
   top: 50%;
   left: 0;
@@ -283,8 +298,7 @@ h2 {
   pointer-events: none;
   transition: 0.15s ease;
 }
-
-.input-field input {
+.form-wrapper form .input-field input {
   width: 100%;
   height: 40px;
   background: transparent;
@@ -293,64 +307,37 @@ h2 {
   font-size: 16px;
   color: #fff;
 }
-
-.input-field input:focus ~ label,
-.input-field input:valid ~ label {
+.form-wrapper form .input-field input:focus ~ label,
+.form-wrapper form .input-field input:valid ~ label {
   font-size: 0.8rem;
   top: 10px;
   transform: translateY(-120%);
 }
-
-.forget {
+.form-wrapper form .forget {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin: 25px 0 35px 0;
   color: #fff;
 }
-
-#remember {
+.form-wrapper form #remember {
   accent-color: #fff;
 }
-
-.forget label {
+.form-wrapper form .forget label {
   display: flex;
   align-items: center;
 }
-
-.forget label p {
+.form-wrapper form .forget label p {
   margin-left: 8px;
 }
-
-.wrapper a {
+.form-wrapper form .wrapper a {
   color: #efefef;
   text-decoration: none;
 }
-
-.wrapper a:hover {
+.form-wrapper form .wrapper a:hover {
   text-decoration: underline;
 }
-
-button {
-  background: #fff;
-  color: #000;
-  font-weight: 600;
-  border: none;
-  padding: 12px 20px;
-  cursor: pointer;
-  border-radius: 3px;
-  font-size: 16px;
-  border: 2px solid transparent;
-  transition: 0.3s ease;
-}
-
-button:hover {
-  color: #fff;
-  border-color: #fff;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.register {
+.form-wrapper form .register {
   text-align: center;
   margin-top: 30px;
   color: #fff;
@@ -476,6 +463,172 @@ button:hover {
   background-color: #0056b3;
 }
 
+.signup-page {
+  min-height: 100vh;
+  padding: 4rem 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.signup-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.signup-form {
+  padding: 3rem;
+}
+.signup-form .form-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+.signup-form .form-header h2 {
+  font-size: 2.5rem;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+.signup-form .form-header .subtitle {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
+}
+.signup-form .form-body .input-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.signup-form .form-body .input-field {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+.signup-form .form-body .input-field select option {
+  background: #2a5298;
+  color: #fff;
+  padding: 1rem;
+}
+.signup-form .form-body .input-field select option:hover, .signup-form .form-body .input-field select option:focus, .signup-form .form-body .input-field select option:active {
+  background: #ff4444;
+  color: #fff;
+}
+.signup-form .form-body .input-field select option:checked {
+  background: #ff4444;
+  color: #fff;
+}
+.signup-form .form-body .input-field select option:hover {
+  background: #ff4444;
+  color: #fff;
+}
+.signup-form .form-body .input-field input, .signup-form .form-body .input-field select, .signup-form .form-body .input-field textarea {
+  width: 100%;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+.signup-form .form-body .input-field input:focus, .signup-form .form-body .input-field select:focus, .signup-form .form-body .input-field textarea:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+}
+.signup-form .form-body .input-field input::placeholder, .signup-form .form-body .input-field select::placeholder, .signup-form .form-body .input-field textarea::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+.signup-form .form-body .input-field textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+.signup-form .form-body .input-field label {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  font-size: 0.9rem;
+}
+.signup-form .form-body .input-field input:focus ~ label,
+.signup-form .form-body .input-field input:valid ~ label,
+.signup-form .form-body .input-field select:focus ~ label,
+.signup-form .form-body .input-field select:valid ~ label,
+.signup-form .form-body .input-field textarea:focus ~ label,
+.signup-form .form-body .input-field textarea:valid ~ label {
+  transform: translateY(-2rem);
+  font-size: 0.8rem;
+  color: #fff;
+}
+.signup-form .form-body .terms-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+}
+.signup-form .form-body .terms-checkbox input[type=checkbox] {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.signup-form .form-body .terms-checkbox label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+}
+.signup-form .form-footer {
+  text-align: center;
+}
+.signup-form .form-footer button {
+  width: 100%;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.signup-form .form-footer button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+.signup-form .form-footer .login-link {
+  margin-top: 1.5rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+.signup-form .form-footer .login-link a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+}
+.signup-form .form-footer .login-link a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .signup-form {
+    padding: 2rem;
+  }
+  .signup-form .form-body .input-group {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 480px) {
+  .signup-page {
+    padding: 2rem 0;
+  }
+  .signup-form {
+    padding: 1.5rem;
+  }
+  .signup-form .form-header h2 {
+    font-size: 2rem;
+  }
+}
 .modal-overlay {
   position: fixed;
   top: 0;
