@@ -1,0 +1,167 @@
+@use '../utils/all' as *
+
+.signup-page
+  min-height: 100vh
+  padding: 4rem 0
+  background-color: rgba(0, 0, 0, 0.5)
+
+.signup-wrapper
+  max-width: 800px
+  margin: 0 auto
+  background: rgba(0, 0, 0, 0.3)
+  backdrop-filter: blur(12px)
+  -webkit-backdrop-filter: blur(12px)
+  border: 1px solid rgba(255, 255, 255, 0.2)
+  border-radius: 16px
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1)
+
+.signup-form
+  padding: 3rem
+
+  .form-header
+    text-align: center
+    margin-bottom: 3rem
+
+    h2
+      font-size: 2.5rem
+      color: #fff
+      margin-bottom: 0.5rem
+
+    .subtitle
+      color: rgba(255, 255, 255, 0.8)
+      font-size: 1.1rem
+
+  .form-body
+    .input-group
+      display: grid
+      grid-template-columns: 1fr 1fr
+      gap: 1.5rem
+      margin-bottom: 1.5rem
+
+    .input-field
+      position: relative
+      margin-bottom: 1.5rem
+
+      select
+        option
+            background: #2a5298
+            color: #fff
+            padding: 1rem
+      
+            &:hover, &:focus, &:active
+                background: #ff4444
+                color: #fff
+      
+            &:checked
+                background: #ff4444
+                color: #fff
+
+        &:focus
+        option:hover
+            background: #ff4444
+            color: #fff
+
+      input, select, textarea
+        width: 100%
+        padding: 1rem
+        background: rgba(255, 255, 255, 0.1)
+        border: 1px solid rgba(255, 255, 255, 0.2)
+        border-radius: 8px
+        color: #fff
+        font-size: 1rem
+        transition: all 0.3s ease
+
+        &:focus
+          outline: none
+          border-color: rgba(255, 255, 255, 0.5)
+          background: rgba(255, 255, 255, 0.15)
+
+        &::placeholder
+          color: rgba(255, 255, 255, 0.6)
+
+      textarea
+        min-height: 100px
+        resize: vertical
+
+      label
+        position: absolute
+        left: 1rem
+        top: 1rem
+        color: rgba(255, 255, 255, 0.8)
+        transition: all 0.3s ease
+        pointer-events: none
+        font-size: 0.9rem
+
+      input:focus ~ label,
+      input:valid ~ label,
+      select:focus ~ label,
+      select:valid ~ label,
+      textarea:focus ~ label,
+      textarea:valid ~ label
+        transform: translateY(-2rem)
+        font-size: 0.8rem
+        color: #fff
+
+    .terms-checkbox
+      display: flex
+      align-items: center
+      gap: 0.5rem
+      margin: 1.5rem 0
+      
+      input[type="checkbox"]
+        width: 1.2rem
+        height: 1.2rem
+
+      label
+        color: rgba(255, 255, 255, 0.8)
+        font-size: 0.9rem
+
+  .form-footer
+    text-align: center
+
+    button
+      width: 100%
+      padding: 1rem
+      background: rgba(255, 255, 255, 0.2)
+      border: 1px solid rgba(255, 255, 255, 0.3)
+      border-radius: 8px
+      color: #fff
+      font-size: 1.1rem
+      font-weight: 600
+      cursor: pointer
+      transition: all 0.3s ease
+
+      &:hover
+        background: rgba(255, 255, 255, 0.3)
+        transform: translateY(-2px)
+
+    .login-link
+      margin-top: 1.5rem
+      color: rgba(255, 255, 255, 0.8)
+
+      a
+        color: #fff
+        text-decoration: none
+        font-weight: 600
+        
+        &:hover
+          text-decoration: underline
+
+@media (max-width: 768px)
+  .signup-form
+    padding: 2rem
+
+    .form-body
+      .input-group
+        grid-template-columns: 1fr
+
+@media (max-width: 480px)
+  .signup-page
+    padding: 2rem 0
+
+  .signup-form
+    padding: 1.5rem
+
+    .form-header
+      h2
+        font-size: 2rem

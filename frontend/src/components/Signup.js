@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Header from './Header';
 import Footer from './Footer';
 
-export default function Signup() {
+const Signup = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -15,7 +15,6 @@ export default function Signup() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission
   };
 
   return (
@@ -24,86 +23,90 @@ export default function Signup() {
       <main className="signup-page">
         <div className="container">
           <div className="signup-wrapper">
-            <form onSubmit={handleSubmit}>
-              <h2>Create Account</h2>
-              <p className="subtitle">Join our book-loving community</p>
-              
-              <div className="input-field">
-                <input 
-                  type="text" 
-                  id="fullName"
-                  required
-                />
-                <label htmlFor="fullName">Full Name</label>
+            <form onSubmit={handleSubmit} className="signup-form">
+              <div className="form-header">
+                <h2>Create Account</h2>
+                <p className="subtitle">Join our book-loving community</p>
               </div>
 
-              <div className="input-field">
-                <input 
-                  type="email" 
-                  id="email"
-                  required
-                />
-                <label htmlFor="email">Email Address</label>
+              <div className="form-body">
+                <div className="input-group">
+                  <div className="input-field">
+                    <input 
+                      type="text" 
+                      id="fullName"
+                      required
+                    />
+                    <label htmlFor="fullName">Full Name</label>
+                  </div>
+
+                  <div className="input-field">
+                    <input 
+                      type="email" 
+                      id="email"
+                      required
+                    />
+                    <label htmlFor="email">Email Address</label>
+                  </div>
+                </div>
+
+                <div className="input-group">
+                  <div className="input-field">
+                    <input 
+                      type="password" 
+                      id="password"
+                      required
+                    />
+                    <label htmlFor="password">Password</label>
+                  </div>
+
+                  <div className="input-field">
+                    <input 
+                      type="password" 
+                      id="confirmPassword"
+                      required
+                    />
+                    <label htmlFor="confirmPassword">Confirm Password</label>
+                  </div>
+                </div>
+
+                <div className="input-field">
+                  <input 
+                    type="tel" 
+                    id="phone"
+                    required
+                  />
+                  <label htmlFor="phone">Phone Number</label>
+                </div>
+
+                <div className="input-field">
+                  <textarea 
+                    id="address"
+                    required
+                  ></textarea>
+                  <label htmlFor="address">Delivery Address</label>
+                </div>
+
+                <div className="input-field">
+                  <select id="favoriteGenre" required>
+                    <option value="">Select your favorite genre</option>
+                    <option value="fiction">Fiction</option>
+                    <option value="non-fiction">Non-Fiction</option>
+                    <option value="mystery">Mystery</option>
+                    <option value="sci-fi">Science Fiction</option>
+                    <option value="romance">Romance</option>
+                  </select>
+                </div>
+
+                <div className="terms-checkbox">
+                  <input type="checkbox" id="terms" required />
+                  <label htmlFor="terms">I agree to the Terms & Conditions</label>
+                </div>
               </div>
 
-              <div className="input-field">
-                <input 
-                  type="password" 
-                  id="password"
-                  required
-                />
-                <label htmlFor="password">Password</label>
+              <div className="form-footer">
+                <button type="submit">Create Account</button>
               </div>
-
-              <div className="input-field">
-                <input 
-                  type="password" 
-                  id="confirmPassword"
-                  required
-                />
-                <label htmlFor="confirmPassword">Confirm Password</label>
-              </div>
-
-              <div className="input-field">
-                <input 
-                  type="tel" 
-                  id="phone"
-                  required
-                />
-                <label htmlFor="phone">Phone Number</label>
-              </div>
-
-              <div className="input-field">
-                <input 
-                  type="text" 
-                  id="address"
-                  required
-                />
-                <label htmlFor="address">Delivery Address</label>
-              </div>
-
-              <div className="input-field">
-                <select id="favoriteGenre" required>
-                  <option value="">Select Genre</option>
-                  <option value="fiction">Fiction</option>
-                  <option value="non-fiction">Non-Fiction</option>
-                  <option value="mystery">Mystery</option>
-                  <option value="sci-fi">Science Fiction</option>
-                  <option value="romance">Romance</option>
-                </select>
-                <label htmlFor="favoriteGenre">Favorite Book Genre</label>
-              </div>
-
-              <div className="terms">
-                <input type="checkbox" id="terms" required />
-                <label htmlFor="terms">I agree to the Terms & Conditions</label>
-              </div>
-
-              <button type="submit">Create Account</button>
-
-              <p className="login-link">
-                Already have an account? <a href="/login">Login here</a>
-              </p>
             </form>
           </div>
         </div>
@@ -112,3 +115,5 @@ export default function Signup() {
     </>
   );
 };
+
+export default Signup;
