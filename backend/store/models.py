@@ -13,22 +13,6 @@ class User(AbstractUser):
     address = models.TextField(null=True, blank=True)
     contact = models.CharField(max_length=15, null=True, blank=True)
 
-    groups = models.ManyToManyField(
-        'auth.Group',
-        related_name='store_users',
-        blank=True,
-        verbose_name='groups',
-        help_text='The groups this user belongs to.'
-    )
-    user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        related_name='store_users',
-        blank=True,
-        verbose_name='user permissions',
-        help_text='Specific permissions for this user.'
-    )
-
-
 class Publisher(models.Model):
     name = models.CharField(max_length=255)
     contact = models.CharField(max_length=15, null=True, blank=True)
@@ -57,7 +41,7 @@ class Book(models.Model):
 
     title = models.CharField(max_length=255)
     isbn = models.CharField(max_length=13, unique=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     stock = models.PositiveIntegerField(default=0)  # Set default for new field
     description = models.TextField(null=True, blank=True)
     category = models.CharField(max_length=100)
@@ -91,10 +75,12 @@ class Order(models.Model):
 class OrderDetail(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_details')
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='order_details')
-    quantity = models.PositiveIntegerField(default=1)  # Default value
-    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)  # Default value
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    quantity = models.PositiveIntegerField()  # Removed default=1
+    price = models.DecimalField(max_digits=10, decimal_places=2, editable=False)  # Auto-calculated
+
+    def save(self, *args, **kwargs):
+        self.price = self.book.price * self.quantity
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Order Detail #{self.id}"

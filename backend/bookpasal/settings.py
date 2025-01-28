@@ -98,11 +98,11 @@ WSGI_APPLICATION = 'bookpasal.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'bookpasal',
-        'USER': 'bookpasal_user',
-        'PASSWORD': 'bookpasal123',
+        'NAME': 'local',
+        'USER': 'root',
+        'PASSWORD': 'root',
         'HOST': 'localhost',
-        'PORT': '3306',
+        'PORT': '10035',
     }
 }
 
