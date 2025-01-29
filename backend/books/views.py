@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.conf import settings
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -12,6 +13,7 @@ from .models import Book, Author, Publisher
 from .serializers import BookSerializer, AuthorSerializer, PublisherSerializer
 from users.permissions import IsAdminOrPublisher
 from django.shortcuts import get_object_or_404
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 # Create your views here.
 
@@ -22,12 +24,21 @@ class BookViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'isbn', 'authors__user__username', 'category']
     ordering_fields = ['price', 'created_at', 'average_rating']
 
+    # def get_permissions(self):
+    #     # Allow all actions without authentication for development
+    #     permission_classes = [AllowAny]
+    #     return [permission() for permission in permission_classes]
+    #     # @todo  Remove above line after development is done... 
+    #     if self.action in ['create', 'update', 'partial_update', 'destroy']:
+    #         permission_classes = [IsAuthenticated, IsAdminOrPublisher]
+    #     else:
+    #         permission_classes = [AllowAny]
+    #     return [permission() for permission in permission_classes]
+
+
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            permission_classes = [IsAuthenticated, IsAdminOrPublisher]
-        else:
-            permission_classes = [AllowAny]
-        return [permission() for permission in permission_classes]
+        print(self.request.META.get('HTTP_AUTHORIZATION'))
+        return [AllowAny()]
 
     @action(detail=True, methods=['post'])
     def add_to_wishlist(self, request, pk=None):

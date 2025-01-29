@@ -153,3 +153,80 @@ python manage.py makemigrations reviews
 python manage.py migrate
 ```
 
+
+
+
+
+
+## API Endpoints
+1. Books API
+    List Books
+    URL: /api/books/
+    Method: GET
+    Description: Retrieve a list of all books.
+    Create a New Book
+    URL: /api/books/
+    Method: POST
+    Description: Create a new book. Requires authentication.
+    Retrieve a Specific Book
+    URL: /api/books/{id}/
+    Method: GET
+    Description: Retrieve details of a specific book by ID.
+    Update a Specific Book
+    URL: /api/books/{id}/
+    Method: PUT
+    Description: Update an existing book by ID. Requires authentication.
+    Delete a Specific Book
+    URL: /api/books/{id}/
+    Method: DELETE
+    Description: Delete a specific book by ID. Requires authentication.
+
+2. Authors API
+    List Authors
+    URL: /api/authors/
+    Method: GET
+    Description: Retrieve a list of all authors.
+    Create a New Author
+    URL: /api/authors/
+    Method: POST
+    Description: Create a new author. Requires authentication.
+    Retrieve a Specific Author
+    URL: /api/authors/{id}/
+    Method: GET
+    Description: Retrieve details of a specific author by ID.
+    Update a Specific Author
+    URL: /api/authors/{id}/
+    Method: PUT
+    Description: Update an existing author by ID. Requires authentication.
+    Delete a Specific Author
+    URL: /api/authors/{id}/
+    Method: DELETE
+    Description: Delete a specific author by ID. Requires authentication.
+
+3. Publishers API
+    List Publishers
+    URL: /api/publishers/
+    Method: GET
+    Description: Retrieve a list of all publishers.
+    Create a New Publisher
+    URL: /api/publishers/
+    Method: POST
+    Description: Create a new publisher. Requires authentication.
+    Retrieve a Specific Publisher
+    URL: /api/publishers/{id}/
+    Method: GET
+    Description: Retrieve details of a specific publisher by ID.
+    Update a Specific Publisher
+    URL: /api/publishers/{id}/
+    Method: PUT
+    Description: Update an existing publisher by ID. Requires authentication.
+    Delete a Specific Publisher
+    URL: /api/publishers/{id}/
+    Method: DELETE
+    Description: Delete a specific publisher by ID. Requires authentication.
+    Summary of HTTP Methods
+    GET: Used to retrieve data (list or specific item).
+    POST: Used to create a new resource.
+    PUT: Used to update an existing resource.
+    DELETE: Used to remove a resource.
+    Note
