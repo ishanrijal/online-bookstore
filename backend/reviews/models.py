@@ -5,16 +5,21 @@ from books.models import Book
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='reviews')
-    rating = models.PositiveIntegerField(default=1)
-    comment = models.TextField(null=True, blank=True)
+    rating = models.PositiveSmallIntegerField(choices=[(i, i) for i in range(1, 6)])
+    comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ('user', 'book')
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Update book's average rating
+        self.book.update_rating_stats()
+
     def __str__(self):
-        return f"Review by {self.user.username} on {self.book.title}"
+        return f"Review by {self.user.username} for {self.book.title}"
 
 class Wishlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlist')

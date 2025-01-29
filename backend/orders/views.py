@@ -12,16 +12,14 @@ from .serializers import (
 from books.models import Book
 from django.http import FileResponse
 from .utils import generate_invoice_pdf
+from users.permissions import IsVerifiedUser
 
 class CartViewSet(viewsets.ModelViewSet):
-    serializer_class = CartSerializer
     permission_classes = [IsAuthenticated]
+    serializer_class = CartSerializer
 
     def get_queryset(self):
         return Cart.objects.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
 
     @action(detail=True, methods=['post'])
     def add_item(self, request, pk=None):
@@ -30,87 +28,46 @@ class CartViewSet(viewsets.ModelViewSet):
         quantity = int(request.data.get('quantity', 1))
 
         try:
-            book = Book.objects.get(id=book_id)
             cart_item, created = CartItem.objects.get_or_create(
                 cart=cart,
-                book=book,
+                book_id=book_id,
                 defaults={'quantity': quantity}
             )
-            
             if not created:
                 cart_item.quantity += quantity
                 cart_item.save()
-
-            serializer = CartItemSerializer(cart_item)
-            return Response(serializer.data)
-        except Book.DoesNotExist:
-            return Response(
-                {'error': 'Book not found'}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({'status': 'Item added to cart'})
         except Exception as e:
-            return Response(
-                {'error': str(e)}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'])
     def remove_item(self, request, pk=None):
         cart = self.get_object()
         item_id = request.data.get('item_id')
-
-        try:
-            item = CartItem.objects.get(id=item_id, cart=cart)
-            item.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except CartItem.DoesNotExist:
-            return Response(
-                {'error': 'Item not found'}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-    @action(detail=True, methods=['post'])
-    def update_quantity(self, request, pk=None):
-        cart = self.get_object()
-        item_id = request.data.get('item_id')
-        quantity = request.data.get('quantity')
-
-        try:
-            item = CartItem.objects.get(id=item_id, cart=cart)
-            item.quantity = quantity
-            item.save()
-            serializer = CartItemSerializer(item)
-            return Response(serializer.data)
-        except CartItem.DoesNotExist:
-            return Response(
-                {'error': 'Item not found'}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
+        cart.items.filter(id=item_id).delete()
+        return Response({'status': 'Item removed from cart'})
 
 class OrderViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated, IsVerifiedUser]
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        # Create order from cart
-        cart = get_object_or_404(Cart, user=self.request.user)
         order = serializer.save(user=self.request.user)
-
-        # Create order details from cart items
-        for cart_item in cart.items.all():
-            OrderDetail.objects.create(
-                order=order,
-                book=cart_item.book,
-                quantity=cart_item.quantity
+        cart = self.request.user.cart
+        
+        # Convert cart items to order details
+        for item in cart.items.all():
+            order.order_details.create(
+                book=item.book,
+                quantity=item.quantity,
+                price=item.book.price * item.quantity
             )
-
+        
         # Clear the cart
         cart.items.all().delete()
-
-        return order
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
@@ -119,10 +76,15 @@ class OrderViewSet(viewsets.ModelViewSet):
             order.status = 'Cancelled'
             order.save()
             return Response({'status': 'Order cancelled'})
-        return Response(
-            {'error': 'Order cannot be cancelled'}, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({'error': 'Cannot cancel this order'}, 
+                       status=status.HTTP_400_BAD_REQUEST)
+
+class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = InvoiceSerializer
+
+    def get_queryset(self):
+        return Invoice.objects.filter(order__user=self.request.user)
 
     @action(detail=True, methods=['get'])
     def generate_invoice(self, request, pk=None):

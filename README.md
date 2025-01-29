@@ -96,3 +96,60 @@ GET/PUT/PATCH/DELETE /api/orders/orders/{order_id}/
 POST /api/orders/orders/{order_id}/cancel/
 GET /api/orders/orders/{order_id}/generate_invoice/
 
+
+
+# This implementation provides:
+1. JWT authentication with custom claims
+2. Role-based access control
+3. User registration with email verification
+4. Profile update functionality
+5. Secure password handling
+6. Custom permissions for different user roles
+
+# To use this:
+1. Users can register using POST to /api/users/
+2. Login using POST to /api/users/token/
+3. Use the received token in Authorization header: Bearer <token>
+4. Refresh tokens using POST to /api/users/token/refresh/
+5. Update profile using PUT to /api/users/profile/
+6. Verify email using POST to /api/users/verify-email/
+
+# Remember to:
+1. Replace the email settings with your actual email credentials
+2. Add appropriate error handling
+3. Consider adding password reset functionality
+4. Add rate limiting for security
+5. Consider adding more robust email templates
+
+
+# Remember to:
+1. Set up proper environment variables for sensitive data
+2. Implement proper error handling
+3. Add rate limiting for API endpoints
+4. Add proper validation for all inputs
+5. Implement caching for frequently accessed data
+6. Add proper logging
+7. Implement proper security measures
+
+
+# Revert Migrations
+```bash
+python manage.py migrate --fake users zero
+python manage.py migrate --fake books zero
+python manage.py migrate --fake orders zero
+python manage.py migrate --fake payments zero
+python manage.py migrate --fake reviews zero
+```
+# Create fresh migration    
+```bash
+python manage.py makemigrations users
+python manage.py makemigrations books
+python manage.py makemigrations orders
+python manage.py makemigrations payments
+python manage.py makemigrations reviews
+```
+# Apply migration
+```bash
+python manage.py migrate
+```
+
