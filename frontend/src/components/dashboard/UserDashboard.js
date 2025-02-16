@@ -4,6 +4,7 @@ import Header from '../Header';
 import Footer from '../Footer';
 import DashboardSidebar from './DashboardSidebar';
 import OrderHistory from './OrderHistory';
+import Profile from './Profile';
 import '../../sass/components/_dashboard.sass';
 
 const UserDashboard = () => {
@@ -14,6 +15,7 @@ const UserDashboard = () => {
                 <DashboardSidebar />
                 <main className="dashboard__content">
                     <Routes>
+                        <Route path="profile" element={<Profile />} />
                         <Route path="orders" element={<OrderHistory />} />
                         {/* Add other dashboard routes here */}
                     </Routes>

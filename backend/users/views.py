@@ -10,9 +10,10 @@ from django.core.mail import send_mail
 from django.conf import settings
 from .models import User, EmailVerificationToken
 from .serializers import (UserSerializer, CustomTokenObtainPairSerializer, 
-                         UserProfileUpdateSerializer)
+                         UserProfileUpdateSerializer, UserProfileSerializer, ChangePasswordSerializer)
 from .permissions import IsAdminOrPublisher, IsOwnerOrReadOnly
 from django.db.models import Q
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 User = get_user_model()
 
@@ -57,7 +58,9 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
 
     # def get_permissions(self):
     #     if self.action in ['create']:
@@ -75,13 +78,37 @@ class UserViewSet(viewsets.ModelViewSet):
         print(self.request.META.get('HTTP_AUTHORIZATION'))
         return [AllowAny()]
 
-    @action(detail=False, methods=['put'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get', 'patch'])
     def profile(self, request):
-        user = request.user
-        serializer = UserProfileUpdateSerializer(user, data=request.data, partial=True)
+        if request.method == 'GET':
+            serializer = self.get_serializer(request.user)
+            return Response(serializer.data)
+        
+        # Handle both multipart and JSON data
+        if request.content_type == 'application/json':
+            serializer = self.get_serializer(request.user, data=request.data, partial=True)
+        else:
+            # Handle multipart form data
+            serializer = self.get_serializer(
+                request.user,
+                data=request.data,
+                partial=True,
+                context={'request': request}
+            )
+            
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'])
+    def change_password(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            user = request.user
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+            return Response({'message': 'Password changed successfully'})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'])
