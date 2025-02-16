@@ -4,6 +4,7 @@ import Header from './Header';
 import Footer from './Footer';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import '../sass/components/_notificationBox.sass';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -23,6 +24,13 @@ const Signup = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState({
+    type: '',
+    message: '',
+    details: null
+  });
 
   // Redirect if already logged in
   useEffect(() => {
@@ -89,31 +97,24 @@ const Signup = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log("Form submission started");
     e.preventDefault();
     
     const isValid = validateForm();
-    console.log("Form validation result:", isValid);
-    
-    if (!isValid || isSubmitting) {
-        console.log("Form submission stopped - validation failed or already submitting");
+    if (!isValid || loading) {
         return;
     }
     
-    console.log("Form validation passed");
-    setIsSubmitting(true);
+    setLoading(true);
     try {
         const submitData = new FormData();
         
-        // Add all form fields to FormData
         Object.keys(formData).forEach(key => {
-            // Don't send null or empty values for optional fields
-            if (formData[key] !== null && formData[key] !== '') {
-                if (key === 'profile_picture' && formData[key] instanceof File) {
-                    submitData.append(key, formData[key]);
-                } else {
+            if (key === 'profile_picture') {
+                if (formData[key] instanceof File) {
                     submitData.append(key, formData[key]);
                 }
+            } else {
+                submitData.append(key, formData[key] || '');
             }
         });
 
@@ -123,27 +124,23 @@ const Signup = () => {
             {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    'Accept': 'application/json',
                 },
             }
         );
 
         if (response.status === 201) {
-            setSuccessMessage('Account created successfully!');
+            setNotification({
+                type: 'success',
+                message: 'Account created successfully! Redirecting...',
+                details: null
+            });
             
-            // Store user data in localStorage
             localStorage.setItem('user', JSON.stringify(response.data));
             
-            // Role-based redirection
             setTimeout(() => {
                 switch(formData.role) {
                     case 'Admin':
                         navigate('/admin');
-                        break;
-                    case 'Publisher':
-                    case 'Author':
-                    case 'Reader':
-                        navigate('/dashboard');
                         break;
                     default:
                         navigate('/dashboard');
@@ -151,29 +148,46 @@ const Signup = () => {
             }, 1500);
         }
     } catch (error) {
-        console.error('Registration error details:', error.response?.data);
+        console.error('Registration error:', error);
         
-        // Handle different types of error responses
         if (error.response?.data) {
             const errorData = error.response.data;
             
-            // Handle field-specific errors
             if (typeof errorData === 'object') {
                 const fieldErrors = {};
+                const errorDetails = [];
+                
                 Object.keys(errorData).forEach(key => {
-                    fieldErrors[key] = Array.isArray(errorData[key]) 
-                        ? errorData[key][0] 
-                        : errorData[key];
+                    const messages = Array.isArray(errorData[key]) 
+                        ? errorData[key] 
+                        : [errorData[key]];
+                    
+                    fieldErrors[key] = messages[0];
+                    errorDetails.push(`${key}: ${messages[0]}`);
                 });
+                
                 setErrors(fieldErrors);
+                setNotification({
+                    type: 'error',
+                    message: 'Registration failed',
+                    details: errorDetails
+                });
             } else {
-                setErrors({ submit: 'Registration failed. Please try again.' });
+                setNotification({
+                    type: 'error',
+                    message: 'Registration failed. Please try again.',
+                    details: null
+                });
             }
         } else {
-            setErrors({ submit: 'Network error. Please try again.' });
+            setNotification({
+                type: 'error',
+                message: 'Network error. Please check your connection and try again.',
+                details: null
+            });
         }
     } finally {
-        setIsSubmitting(false);
+        setLoading(false);
     }
   };
 
@@ -189,6 +203,27 @@ const Signup = () => {
     <>
       <Header />
       <main className="signup-page">
+        {notification.message && (
+          <div className={`notification-box notification-box--${notification.type}`}>
+            <div className="notification-box__content">
+              <span className="notification-box__message">{notification.message}</span>
+              {notification.details && (
+                <ul className="notification-box__details">
+                  {notification.details.map((detail, index) => (
+                    <li key={index}>{detail}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <button 
+              className="notification-box__close"
+              onClick={() => setNotification({ type: '', message: '', details: null })}
+            >
+              ×
+            </button>
+            <div className="notification-box__border"></div>
+          </div>
+        )}
         <div className="container">
           <div className="signup-wrapper">
             <form onSubmit={handleSubmit} className="signup-form" encType="multipart/form-data" noValidate>
@@ -313,10 +348,14 @@ const Signup = () => {
               <div className="form-footer">
                 <button 
                   type="submit" 
-                  className="submit-btn" 
-                  disabled={isSubmitting}
+                  className={`submit-btn ${loading ? 'loading' : ''}`}
+                  disabled={loading}
                 >
-                  {isSubmitting ? 'Creating Account...' : 'Create Account'}
+                  {loading ? (
+                    <span className="loading-spinner"></span>
+                  ) : (
+                    'Create Account'
+                  )}
                 </button>
               </div>
             </form>

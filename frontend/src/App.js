@@ -6,17 +6,19 @@ import Categories from './components/Categories';
 import Contact from './components/Contact';
 import About from './components/About';
 import AdminDashboard from './components/admin/AdminDashboard';
-import { ManageBooks, AddBook, EditBook } from './components/admin/books';
+import { ManageBooks, AddBook } from './components/admin/books';
 import ManageOrders from './components/admin/orders/ManageOrders';
 import ManageUsers from './components/admin/ManageUsers';
 import ManagePayments from './components/admin/ManagePayments';
 import ManageReviews from './components/admin/ManageReviews';
 import AdminBookDetail from './components/admin/books/BookDetail';
-import BookDetail from './components/books/BookDetail';
-import Cart from './components/cart/Cart';
+import BookDetail from './components/BookDetail';
+import Cart from './components/Cart';
 import UserDashboard from './components/dashboard/UserDashboard';
 import Login from './components/Login';
 import { AuthProvider, ProtectedRoute, PublicOnlyRoute, AdminRoute } from './context/AuthContext';
+import EditBook from './components/admin/books/EditBook';
+import AdminHome from './components/admin/AdminHome';
 import './assets/css/style.css';
 
 function App() {
@@ -24,6 +26,7 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/register" element={
             <PublicOnlyRoute>
@@ -33,11 +36,32 @@ function App() {
           <Route path="/categories" element={<Categories />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
+          <Route path="/books/:id" element={<BookDetail />} />
+          <Route path="/cart" element={
+            <ProtectedRoute>
+              <Cart />
+            </ProtectedRoute>
+          } />
+          <Route path="/login" element={
+            <PublicOnlyRoute>
+              <Login />
+            </PublicOnlyRoute>
+          } />
+
+          {/* Protected User Routes */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <UserDashboard />
+            </ProtectedRoute>
+          } />
+
+          {/* Protected Admin Routes */}
           <Route path="/admin" element={
             <AdminRoute>
               <AdminDashboard />
             </AdminRoute>
           }>
+            <Route index element={<AdminHome />} />
             <Route path="manage-books" element={<ManageBooks />} />
             <Route path="manage-books/:id" element={<AdminBookDetail />} />
             <Route path="manage-books/new" element={<AddBook />} />
@@ -47,18 +71,8 @@ function App() {
             <Route path="manage-payments" element={<ManagePayments />} />
             <Route path="manage-reviews" element={<ManageReviews />} />
           </Route>
-          <Route path="/books/:id" element={<BookDetail />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <UserDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/login" element={
-            <PublicOnlyRoute>
-              <Login />
-            </PublicOnlyRoute>
-          } />
+
+          <Route path="/book/:id" element={<BookDetail />} />
         </Routes>
       </Router>
     </AuthProvider>

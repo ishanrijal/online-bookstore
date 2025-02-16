@@ -9,7 +9,7 @@ class PublisherSerializer(serializers.ModelSerializer):
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
-        fields = '__all__'
+        fields = ['id', 'user', 'bio', 'contact', 'profile_image']
 
 class CategorySerializer(serializers.ModelSerializer):
     book_count = serializers.SerializerMethodField()
@@ -26,24 +26,25 @@ class BookSerializer(serializers.ModelSerializer):
     publisher_details = PublisherSerializer(source='publisher', read_only=True)
     authors_details = AuthorSerializer(source='authors', many=True, read_only=True)
     category_name = serializers.CharField(source='category.name', read_only=True)
+    authors = AuthorSerializer(many=True, read_only=True)
 
     class Meta:
         model = Book
         fields = [
-            'id', 'title', 'author', 'publisher', 'category', 'category_name',
-            'created_at', 
-            'updated_at',
-            'authors',  # Make authors read-only for now
+            'id', 'title', 'isbn', 'price', 'stock', 'description',
+            'category', 'language', 'publisher', 'authors',
+            'featured', 'publication_date', 'page_count',
+            'dimensions', 'weight', 'edition', 'average_rating',
+            'total_reviews', 'cover_image', 'created_at', 'updated_at',
+            'category_name',
             'publisher_details',
             'authors_details',
-            'average_rating',
-            'total_reviews',
             'favorited_by'
         ]
         read_only_fields = [
             'created_at', 
             'updated_at',
-            'authors',  # Make authors read-only for now
+            'authors',
             'publisher_details',
             'authors_details',
             'average_rating',

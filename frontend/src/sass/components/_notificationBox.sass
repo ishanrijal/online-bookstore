@@ -1,3 +1,8 @@
+.notifications-container
+  display: flex
+  flex-direction: column
+  gap: 10px
+
 .notification-box
     position: fixed
     top: 20px
@@ -48,6 +53,26 @@
         &:hover
             opacity: 1
 
+    &__content
+        flex: 1
+        
+    &__message
+        display: block
+        margin-bottom: 0.5rem
+        
+    &__details
+        list-style: none
+        padding: 0
+        margin: 0.5rem 0 0
+        font-size: 0.9em
+        opacity: 0.9
+        
+        li
+            margin-bottom: 0.25rem
+            
+            &:last-child
+                margin-bottom: 0
+
 @keyframes border-dance-success
     0%
         border-color: #28a745 transparent transparent transparent
@@ -71,3 +96,26 @@
         border-color: transparent transparent transparent #dc3545
     100%
         border-color: #dc3545 transparent transparent transparent 
+
+// Add loading spinner styles
+.loading-spinner
+    display: inline-block
+    width: 20px
+    height: 20px
+    border: 2px solid rgba(255,255,255,0.3)
+    border-radius: 50%
+    border-top-color: #fff
+    animation: spin 1s ease-in-out infinite
+    margin-right: 8px
+
+@keyframes spin
+    to
+        transform: rotate(360deg)
+
+.submit-btn
+    &.loading
+        opacity: 0.7
+        cursor: not-allowed
+        display: flex
+        align-items: center
+        justify-content: center 

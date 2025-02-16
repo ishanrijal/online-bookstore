@@ -162,26 +162,11 @@ python manage.py migrate
 
 ## API Endpoints
 1. Books API
-    List Books
-    URL: /api/books/
-    Method: GET
-    Description: Retrieve a list of all books.
-    Create a New Book
-    URL: /api/books/
-    Method: POST
-    Description: Create a new book. Requires authentication.
-    Retrieve a Specific Book
-    URL: /api/books/{id}/
-    Method: GET
-    Description: Retrieve details of a specific book by ID.
-    Update a Specific Book
-    URL: /api/books/{id}/
-    Method: PUT
-    Description: Update an existing book by ID. Requires authentication.
-    Delete a Specific Book
-    URL: /api/books/{id}/
-    Method: DELETE
-    Description: Delete a specific book by ID. Requires authentication.
+   List all books: GET /api/books/
+    Get single book: GET /api/books/<id>/
+    Create book: POST /api/books/
+    Update book: PUT/PATCH /api/books/<id>/
+    Delete book: DELETE /api/books/<id>/
 
 2. Authors API
     List Authors

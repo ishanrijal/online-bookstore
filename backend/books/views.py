@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.conf import settings
-from rest_framework import viewsets, filters, status
+from rest_framework import viewsets, filters, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import (
@@ -17,23 +17,65 @@ from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.views import TokenObtainPairView
 import json
 from rest_framework import serializers
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
 
 # Create your views here.
 
-class BookViewSet(viewsets.ModelViewSet):
+class BaseModelViewSet(viewsets.ModelViewSet):
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
+    renderer_classes = [JSONRenderer, BrowsableAPIRenderer]
+    
+    def get_permissions(self):
+        """
+        Global permission setup:
+        - GET (list/retrieve): Allow anyone
+        - POST/PUT/DELETE: Require authentication
+        """
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [permissions.AllowAny]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
+    def create(self, request, *args, **kwargs):
+        try:
+            # Print request data for debugging
+            print("Request Data:", request.data)
+            
+            serializer = self.get_serializer(data=request.data)
+            if not serializer.is_valid():
+                print("Validation errors:", serializer.errors)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
+            self.perform_create(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            print("Error creating book:", str(e))
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class BookViewSet(BaseModelViewSet):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['title', 'isbn', 'authors__user__username', 'category']
+    search_fields = ['title', 'isbn', 'authors__user__username', 'category__name']
     ordering_fields = ['price', 'created_at', 'average_rating']
-    permission_classes = [AllowAny]  # Temporarily allow all actions
-
-    def get_permissions(self):
-        # Debug print statements
-        print("Request method:", self.request.method)
-        print("Authorization header:", self.request.META.get('HTTP_AUTHORIZATION'))
-        print("User:", self.request.user)
-        return [AllowAny()]
 
     @action(detail=True, methods=['post'])
     def add_to_wishlist(self, request, pk=None):
@@ -137,21 +179,18 @@ class BookViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-class AuthorViewSet(viewsets.ModelViewSet):
+class AuthorViewSet(BaseModelViewSet):
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
 
-class PublisherViewSet(viewsets.ModelViewSet):
+class PublisherViewSet(BaseModelViewSet):
     queryset = Publisher.objects.all()
     serializer_class = PublisherSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(BaseModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAdminUser]
-    lookup_field = 'slug'
+    lookup_field = 'slug'  # Allow looking up by slug
 
     def perform_destroy(self, instance):
         # Move books to uncategorized before deleting

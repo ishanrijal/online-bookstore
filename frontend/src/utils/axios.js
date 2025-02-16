@@ -1,11 +1,14 @@
 import axios from 'axios';
 
-const api = axios.create({
-    baseURL: 'http://127.0.0.1:8000/api'
+const instance = axios.create({
+    baseURL: 'http://localhost:8000/api',
+    headers: {
+        'Content-Type': 'application/json'
+    }
 });
 
 // Add token to requests if it exists
-api.interceptors.request.use(config => {
+instance.interceptors.request.use(config => {
     const token = localStorage.getItem('token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -14,7 +17,7 @@ api.interceptors.request.use(config => {
 });
 
 // Handle token expiration
-api.interceptors.response.use(
+instance.interceptors.response.use(
     response => response,
     async error => {
         if (error.response?.status === 401) {
@@ -26,4 +29,4 @@ api.interceptors.response.use(
     }
 );
 
-export default api; 
+export default instance; 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import './admin.css';
@@ -58,7 +58,28 @@ const AdminDashboard = () => {
             </header>
             
             <div className="admin-content">
-                <Sidebar />
+                <div className="admin-sidebar">
+                    <h2>Admin Menu</h2>
+                    <nav>
+                        <ul>
+                            <li>
+                                <Link to="/admin/manage-books">Manage Books</Link>
+                            </li>
+                            <li>
+                                <Link to="/admin/manage-orders">Manage Orders</Link>
+                            </li>
+                            <li>
+                                <Link to="/admin/manage-users">Manage Users</Link>
+                            </li>
+                            <li>
+                                <Link to="/admin/manage-payments">Manage Payments</Link>
+                            </li>
+                            <li>
+                                <Link to="/admin/manage-reviews">Manage Reviews</Link>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
                 <main className="main-content">
                     <Outlet />
                 </main>

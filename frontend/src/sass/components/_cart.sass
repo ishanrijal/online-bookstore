@@ -1,0 +1,151 @@
+.cart
+    padding: 2rem 0
+    min-height: calc(100vh - 200px)
+
+    &__container
+        max-width: 1200px
+        margin: 0 auto
+        padding: 0 1rem
+
+        h1
+            font-size: 2rem
+            color: #333
+            margin-bottom: 2rem
+
+    &__empty
+        text-align: center
+        padding: 3rem
+        background: #fff
+        border-radius: 8px
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1)
+
+        p
+            font-size: 1.2rem
+            color: #666
+            margin-bottom: 1.5rem
+
+    &__items
+        background: #fff
+        border-radius: 8px
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1)
+        margin-bottom: 2rem
+
+    &__summary
+        background: #fff
+        padding: 1.5rem
+        border-radius: 8px
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1)
+
+        &-details
+            margin-bottom: 1.5rem
+
+        .summary-row
+            display: flex
+            justify-content: space-between
+            padding: 0.5rem 0
+            border-bottom: 1px solid #eee
+
+            &.total
+                font-size: 1.2rem
+                font-weight: bold
+                border-bottom: none
+                padding-top: 1rem
+
+.cart-item
+    display: grid
+    grid-template-columns: 120px 1fr auto auto auto
+    gap: 1.5rem
+    align-items: center
+    padding: 1.5rem
+    border-bottom: 1px solid #eee
+
+    &:last-child
+        border-bottom: none
+
+    &__image
+        width: 120px
+        height: 160px
+        
+        img
+            width: 100%
+            height: 100%
+            object-fit: cover
+            border-radius: 4px
+
+    &__details
+        h3
+            margin: 0 0 0.5rem
+            font-size: 1.1rem
+            color: #333
+
+        .cart-item__price
+            color: #666
+
+    &__quantity
+        display: flex
+        align-items: center
+        gap: 0.5rem
+
+        button
+            width: 30px
+            height: 30px
+            border: 1px solid #ddd
+            background: #fff
+            border-radius: 4px
+            cursor: pointer
+            display: flex
+            align-items: center
+            justify-content: center
+
+            &:disabled
+                opacity: 0.5
+                cursor: not-allowed
+
+        span
+            min-width: 30px
+            text-align: center
+
+    &__subtotal
+        font-weight: 500
+        color: #333
+
+    &__remove
+        background: none
+        border: none
+        font-size: 1.5rem
+        color: #999
+        cursor: pointer
+        padding: 0.5rem
+        transition: color 0.3s
+
+        &:hover
+            color: #dc3545
+
+.checkout-btn
+    width: 100%
+    padding: 1rem
+    font-size: 1.1rem
+
+@media (max-width: 768px)
+    .cart-item
+        grid-template-columns: 100px 1fr
+        gap: 1rem
+        position: relative
+
+        &__image
+            width: 100px
+            height: 140px
+
+        &__quantity
+            grid-column: 1
+            margin-top: 1rem
+
+        &__subtotal
+            grid-column: 2
+            text-align: right
+            margin-top: 1rem
+
+        &__remove
+            position: absolute
+            top: 0.5rem
+            right: 0.5rem 

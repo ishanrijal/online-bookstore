@@ -1,60 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useNavigate, useParams } from 'react-router-dom';
+import axios from '../../../utils/axios';
 import LoadingBox from '../../common/LoadingBox';
 import NotificationBox from '../../common/NotificationBox';
+import '../admin.css';
 
 function EditBook() {
     const { id } = useParams();
     const navigate = useNavigate();
+    
+    const [bookData, setBookData] = useState(null);
+    const [title, setTitle] = useState('');
+    const [isbn, setIsbn] = useState('');
+    const [price, setPrice] = useState('');
+    const [stock, setStock] = useState('');
+    const [description, setDescription] = useState('');
+    const [category, setCategory] = useState('');
+    const [language, setLanguage] = useState('English');
+    const [featured, setFeatured] = useState(false);
+    const [publicationDate, setPublicationDate] = useState('');
+    const [pageCount, setPageCount] = useState('');
+    const [dimensions, setDimensions] = useState('');
+    const [weight, setWeight] = useState('');
+    const [edition, setEdition] = useState('');
+    const [publisher, setPublisher] = useState('');
+    const [coverImage, setCoverImage] = useState(null);
+    
+    const [publishers, setPublishers] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [notification, setNotification] = useState({ show: false, message: '', type: '' });
-    const [publishers, setPublishers] = useState([]);
-    const [authors, setAuthors] = useState([]);
-    const [users, setUsers] = useState([]);
-    const [formData, setFormData] = useState({
-        title: '',
-        isbn: '',
-        price: '',
-        stock: '',
-        description: '',
-        category: '',
-        language: 'English',
-        featured: false,
-        publication_date: '',
-        page_count: '',
-        dimensions: '',
-        weight: '',
-        edition: '',
-        publisher: '',
-        authors: []
-    });
-    const [imagePreview, setImagePreview] = useState(null);
-    const [file, setFile] = useState(null);
 
     useEffect(() => {
-        const fetchBookData = async () => {
+        const fetchData = async () => {
             try {
-                const [bookRes, publishersRes, authorsRes, usersRes] = await Promise.all([
-                    axios.get(`http://127.0.0.1:8000/api/books/books/${id}/`),
-                    axios.get('http://127.0.0.1:8000/api/books/publishers/'),
-                    axios.get('http://127.0.0.1:8000/api/books/authors/'),
-                    axios.get('http://127.0.0.1:8000/api/users/')
+                const bookResponse = await axios.get(`/books/${id}/`);
+                const book = bookResponse.data;
+                
+                setBookData(book);
+                
+                setTitle(book.title);
+                setIsbn(book.isbn);
+                setPrice(book.price);
+                setStock(book.stock);
+                setDescription(book.description);
+                setCategory(book.category);
+                setLanguage(book.language);
+                setFeatured(book.featured);
+                setPublicationDate(book.publication_date);
+                setPageCount(book.page_count);
+                setDimensions(book.dimensions);
+                setWeight(book.weight);
+                setEdition(book.edition);
+                setPublisher(book.publisher);
+                
+                const [publishersRes, categoriesRes] = await Promise.all([
+                    axios.get('/publishers/'),
+                    axios.get('/categories/')
                 ]);
-
-                console.log(usersRes)
-
-                setFormData({
-                    ...bookRes.data,
-                    publication_date: bookRes.data.publication_date?.split('T')[0],
-                    authors: bookRes.data.authors.map(author => author.id)
-                });
+                
                 setPublishers(publishersRes.data);
-                setAuthors(authorsRes.data);
-                setUsers(usersRes.data);
+                setCategories(categoriesRes.data);
                 setLoading(false);
             } catch (error) {
-                console.error('Error fetching book data:', error);
+                console.error('Error fetching data:', error);
                 setNotification({
                     show: true,
                     message: 'Error loading book data',
@@ -63,58 +72,39 @@ function EditBook() {
                 setLoading(false);
             }
         };
-
-        fetchBookData();
+        
+        fetchData();
     }, [id]);
-
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
-    };
-
-    const handleImageChange = (e) => {
-        const selectedFile = e.target.files[0];
-        if (selectedFile) {
-            setFile(selectedFile);
-            // Create preview URL
-            const previewUrl = URL.createObjectURL(selectedFile);
-            setImagePreview(previewUrl);
-        }
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
+        
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('isbn', isbn);
+        formData.append('price', price);
+        formData.append('stock', stock);
+        formData.append('description', description);
+        formData.append('category', category);
+        formData.append('language', language);
+        formData.append('featured', featured);
+        formData.append('publication_date', publicationDate);
+        formData.append('page_count', pageCount);
+        formData.append('dimensions', dimensions);
+        formData.append('weight', weight);
+        formData.append('edition', edition);
+        formData.append('publisher', publisher);
+        
+        if (coverImage) {
+            formData.append('cover_image', coverImage);
+        }
 
         try {
-            // Create FormData to handle file upload
-            const formData = new FormData();
-            
-            // Add all book data to FormData
-            Object.keys(formData).forEach(key => {
-                if (key !== 'cover_image') {
-                    formData.append(key, formData[key]);
-                }
+            await axios.put(`/books/${id}/`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
             });
-
-            // Add file if it exists
-            if (file) {
-                formData.append('cover_image', file);
-            }
-
-            const response = await axios.put(
-                `http://127.0.0.1:8000/api/books/books/${id}/`,
-                formData,
-                {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                }
-            );
-
             setNotification({
                 show: true,
                 message: 'Book updated successfully',
@@ -129,8 +119,6 @@ function EditBook() {
                 message: error.response?.data?.detail || 'Error updating book',
                 type: 'error'
             });
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -160,9 +148,9 @@ function EditBook() {
                     <div className="form-group image-upload">
                         <label>Book Cover</label>
                         <div className="image-preview">
-                            {(imagePreview || formData.cover_image) && (
+                            {(coverImage || (bookData && bookData.cover_image)) && (
                                 <img 
-                                    src={imagePreview || formData.cover_image} 
+                                    src={coverImage ? URL.createObjectURL(coverImage) : bookData.cover_image} 
                                     alt="Book cover preview" 
                                     className="cover-preview"
                                 />
@@ -171,7 +159,12 @@ function EditBook() {
                         <input
                             type="file"
                             accept="image/*"
-                            onChange={handleImageChange}
+                            onChange={(e) => {
+                                const selectedFile = e.target.files[0];
+                                if (selectedFile) {
+                                    setCoverImage(selectedFile);
+                                }
+                            }}
                             className="file-input"
                         />
                     </div>
@@ -181,8 +174,8 @@ function EditBook() {
                         <input
                             type="text"
                             name="title"
-                            value={formData.title}
-                            onChange={handleChange}
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
                             required
                         />
                     </div>
@@ -192,8 +185,8 @@ function EditBook() {
                         <input
                             type="text"
                             name="isbn"
-                            value={formData.isbn}
-                            onChange={handleChange}
+                            value={isbn}
+                            onChange={(e) => setIsbn(e.target.value)}
                             required
                         />
                     </div>
@@ -203,8 +196,8 @@ function EditBook() {
                         <input
                             type="number"
                             name="price"
-                            value={formData.price}
-                            onChange={handleChange}
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
                             required
                         />
                     </div>
@@ -214,8 +207,8 @@ function EditBook() {
                         <input
                             type="number"
                             name="stock"
-                            value={formData.stock}
-                            onChange={handleChange}
+                            value={stock}
+                            onChange={(e) => setStock(e.target.value)}
                             required
                         />
                     </div>
@@ -225,8 +218,8 @@ function EditBook() {
                         <input
                             type="text"
                             name="category"
-                            value={formData.category}
-                            onChange={handleChange}
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
                             required
                         />
                     </div>
@@ -235,8 +228,8 @@ function EditBook() {
                         <label>Language</label>
                         <select
                             name="language"
-                            value={formData.language}
-                            onChange={handleChange}
+                            value={language}
+                            onChange={(e) => setLanguage(e.target.value)}
                             required
                         >
                             <option value="English">English</option>
@@ -249,8 +242,8 @@ function EditBook() {
                         <input
                             type="checkbox"
                             name="featured"
-                            checked={formData.featured}
-                            onChange={handleChange}
+                            checked={featured}
+                            onChange={(e) => setFeatured(e.target.checked)}
                         />
                     </div>
 
@@ -259,8 +252,8 @@ function EditBook() {
                         <input
                             type="date"
                             name="publication_date"
-                            value={formData.publication_date}
-                            onChange={handleChange}
+                            value={publicationDate}
+                            onChange={(e) => setPublicationDate(e.target.value)}
                             required
                         />
                     </div>
@@ -270,8 +263,8 @@ function EditBook() {
                         <input
                             type="number"
                             name="page_count"
-                            value={formData.page_count}
-                            onChange={handleChange}
+                            value={pageCount}
+                            onChange={(e) => setPageCount(e.target.value)}
                             required
                         />
                     </div>
@@ -281,8 +274,8 @@ function EditBook() {
                         <input
                             type="text"
                             name="dimensions"
-                            value={formData.dimensions}
-                            onChange={handleChange}
+                            value={dimensions}
+                            onChange={(e) => setDimensions(e.target.value)}
                             required
                         />
                     </div>
@@ -292,8 +285,8 @@ function EditBook() {
                         <input
                             type="text"
                             name="weight"
-                            value={formData.weight}
-                            onChange={handleChange}
+                            value={weight}
+                            onChange={(e) => setWeight(e.target.value)}
                             required
                         />
                     </div>
@@ -303,8 +296,8 @@ function EditBook() {
                         <input
                             type="text"
                             name="edition"
-                            value={formData.edition}
-                            onChange={handleChange}
+                            value={edition}
+                            onChange={(e) => setEdition(e.target.value)}
                             required
                         />
                     </div>
@@ -313,8 +306,8 @@ function EditBook() {
                         <label>Description</label>
                         <textarea
                             name="description"
-                            value={formData.description}
-                            onChange={handleChange}
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
                             required
                         />
                     </div>
@@ -323,8 +316,8 @@ function EditBook() {
                         <label>Publisher</label>
                         <select
                             name="publisher"
-                            value={formData.publisher}
-                            onChange={handleChange}
+                            value={publisher}
+                            onChange={(e) => setPublisher(e.target.value)}
                             required
                         >
                             <option value="">Select Publisher</option>
@@ -333,31 +326,6 @@ function EditBook() {
                                     {pub.name}
                                 </option>
                             ))}
-                        </select>
-                    </div>
-
-                    <div className="form-group">
-                        <label>Authors</label>
-                        <select
-                            multiple
-                            name="authors"
-                            value={formData.authors}
-                            onChange={(e) => {
-                                const values = Array.from(
-                                    e.target.selectedOptions,
-                                    option => option.value
-                                );
-                                setFormData(prev => ({ ...prev, authors: values }));
-                            }}
-                        >
-                            {authors.map(author => {
-                                const user = users.find(u => u.id === author.user);
-                                return (
-                                    <option key={author.id} value={author.id}>
-                                        {user ? `${user.first_name} ${user.last_name} (${user.username})` : 'Loading...'}
-                                    </option>
-                                );
-                            })}
                         </select>
                     </div>
                 </div>

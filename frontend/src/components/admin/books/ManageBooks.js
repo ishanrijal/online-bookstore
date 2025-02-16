@@ -1,49 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../../utils/axios';
 
 function ManageBooks() {
     const [books, setBooks] = useState([]);
     
     useEffect(() => {
-        const fetchBooks = async () => {
-            try {
-                const response = await axios.get('http://127.0.0.1:8000/api/books/books');
-                setBooks(response.data);
-            } catch (error) {
-                console.error('Error fetching books:', error);
-            }
-        };
-
         fetchBooks();
     }, []);
 
-    const handleDelete = async (id) => {
-        const confirmDelete = window.confirm("Do you want to delete this book permanently?");
-        if (confirmDelete) {
-            try {
-                const token = localStorage.getItem('token');
-                const response = await axios.delete(`http://127.0.0.1:8000/api/books/books/${id}/`, {
-                    // headers: {
-                    //     'Authorization': `Bearer ${token}`,
-                    // },
-                });
-
-                if (response.data.status === 'success') {
-                    // Remove the book from state
-                    setBooks(books.filter(book => book.id !== id));
-                    // Show success message (you can implement a notification system)
-                    console.log(response.data.message);
-                }
-            } catch (error) {
-                console.error('Error deleting book:', error);
-                const errorMessage = error.response?.data?.message || 'Error deleting book';
-                // Show error message to user (you can implement a notification system)
-                alert(errorMessage);
-            }
+    const fetchBooks = async () => {
+        try {
+            const response = await axios.get('/books/');
+            setBooks(response.data);
+        } catch (error) {
+            console.error('Error fetching books:', error);
         }
     };
 
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to delete this book?')) {
+            try {
+                await axios.delete(`/books/${id}/`);
+                // Refresh the books list after deletion
+                fetchBooks();
+            } catch (error) {
+                console.error('Error deleting book:', error.response?.data || error.message);
+            }
+        }
+    };
 
     return (
         <div className="admin-book-list-wrapper">
@@ -69,9 +54,8 @@ function ManageBooks() {
                             <td>${book.price}</td>
                             <td>{book.stock}</td>
                             <td className="actions">
-                                <Link to={`/admin/manage-books/${book.id}`}>View</Link>
-                                <Link to={`/admin/manage-books/edit/${book.id}`}>Edit</Link>
-                                <button onClick={() => handleDelete(book.id)}>Delete</button>
+                                <Link to={`/admin/manage-books/edit/${book.id}`} className="btn btn-sm btn-warning me-2">Edit</Link>
+                                <button onClick={() => handleDelete(book.id)} className="btn btn-sm btn-danger">Delete</button>
                             </td>
                         </tr>
                     ))}
