@@ -3,11 +3,27 @@ from .models import Order, OrderDetail, Cart, CartItem, Invoice
 
 class OrderDetailSerializer(serializers.ModelSerializer):
     book_title = serializers.CharField(source='book.title', read_only=True)
+    book_price = serializers.DecimalField(source='book.price', max_digits=10, decimal_places=2, read_only=True)
+    book_cover = serializers.ImageField(source='book.cover_image', read_only=True)
+    subtotal = serializers.SerializerMethodField()  # Calculate subtotal in serializer
 
     class Meta:
         model = OrderDetail
-        fields = '__all__'
+        fields = [
+            'id',
+            'order',
+            'book',
+            'book_title',
+            'book_price',
+            'book_cover',
+            'quantity',
+            'price',
+            'subtotal'
+        ]
         read_only_fields = ['price']
+
+    def get_subtotal(self, obj):
+        return obj.price * obj.quantity
 
 class OrderSerializer(serializers.ModelSerializer):
     order_details = OrderDetailSerializer(many=True, read_only=True)
@@ -16,16 +32,27 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'user', 'total_price', 'status', 'status_display',
-            'shipping_address', 'contact_number', 'tracking_number',
-            'created_at', 'updated_at', 'order_details'
+            'id', 
+            'user',
+            'shipping_address', 
+            'contact_number',
+            'total_price', 
+            'status',
+            'status_display',
+            'created_at',
+            'order_details'
         ]
-        read_only_fields = ['user', 'total_price', 'tracking_number']
+        read_only_fields = [
+            'user',
+            'total_price', 
+            'status',
+            'status_display',
+            'order_details'
+        ]
 
     def create(self, validated_data):
-        user = self.context['request'].user
-        order = Order.objects.create(user=user, **validated_data)
-        return order 
+        validated_data['status'] = 'PENDING'
+        return super().create(validated_data)
 
 class CartItemSerializer(serializers.ModelSerializer):
     book_title = serializers.CharField(source='book.title', read_only=True)

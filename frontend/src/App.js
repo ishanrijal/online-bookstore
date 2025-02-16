@@ -19,6 +19,9 @@ import Login from './components/Login';
 import { AuthProvider, ProtectedRoute, PublicOnlyRoute, AdminRoute } from './context/AuthContext';
 import EditBook from './components/admin/books/EditBook';
 import AdminHome from './components/admin/AdminHome';
+import Checkout from './components/Checkout';
+import PaymentSuccess from './components/PaymentSuccess';
+import PaymentFailure from './components/PaymentFailure';
 import './assets/css/style.css';
 
 function App() {
@@ -49,7 +52,7 @@ function App() {
           } />
 
           {/* Protected User Routes */}
-          <Route path="/dashboard" element={
+          <Route path="/dashboard/*" element={
             <ProtectedRoute>
               <UserDashboard />
             </ProtectedRoute>
@@ -73,6 +76,21 @@ function App() {
           </Route>
 
           <Route path="/book/:id" element={<BookDetail />} />
+          <Route path="/checkout" element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          } />
+          <Route path="/payment/success/:paymentId" element={
+            <ProtectedRoute>
+              <PaymentSuccess />
+            </ProtectedRoute>
+          } />
+          <Route path="/payment/failure/:paymentId" element={
+            <ProtectedRoute>
+              <PaymentFailure />
+            </ProtectedRoute>
+          } />
         </Routes>
       </Router>
     </AuthProvider>

@@ -8,6 +8,8 @@ from .serializers import PaymentSerializer
 import requests
 from django.conf import settings
 from django.utils import timezone
+from orders.models import Order
+from rest_framework.exceptions import ValidationError
 
 # Create your views here.
 
@@ -19,7 +21,36 @@ class PaymentViewSet(viewsets.ModelViewSet):
         return Payment.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save()
+        try:
+            # Get the order and verify it belongs to the user
+            order = Order.objects.get(
+                id=self.request.data.get('order'),
+                user=self.request.user,
+                status='PENDING'
+            )
+            
+            # Create the payment
+            payment = serializer.save(
+                user=self.request.user,
+                amount=order.total_price,
+                status='PENDING'
+            )
+            
+            # If payment method is CASH, mark as completed
+            if self.request.data.get('payment_type') == 'CASH':
+                payment.status = 'COMPLETED'
+                payment.save()
+                
+                # Update order status
+                order.status = 'PAID'
+                order.save()
+            
+            return payment
+            
+        except Order.DoesNotExist:
+            raise ValidationError({
+                'order': 'Invalid order or order does not belong to user'
+            })
 
     @action(detail=True, methods=['post'])
     def verify_esewa(self, request, pk=None):
@@ -109,3 +140,16 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 'created_at': payment.order.created_at
             }
         })
+
+    @action(detail=True, methods=['post'])
+    def verify_payment(self, request, pk=None):
+        payment = self.get_object()
+        # Add your payment verification logic here
+        payment.status = 'COMPLETED'
+        payment.save()
+        
+        # Update order status
+        payment.order.status = 'PAID'
+        payment.order.save()
+        
+        return Response({'status': 'Payment verified'})

@@ -1,22 +1,34 @@
 from rest_framework import serializers
 from .models import Payment
+from orders.models import Order
 
 class PaymentSerializer(serializers.ModelSerializer):
-    order_total = serializers.DecimalField(
-        source='order.total_price',
-        max_digits=10,
-        decimal_places=2,
-        read_only=True
-    )
-
     class Meta:
         model = Payment
-        fields = '__all__'
-        read_only_fields = ['status', 'transaction_id']
+        fields = [
+            'id',
+            'order',
+            'user',
+            'amount',
+            'payment_type',
+            'status',
+            'transaction_id',
+            'created_at'
+        ]
+        read_only_fields = ['user', 'amount', 'status', 'transaction_id']
 
     def validate(self, attrs):
-        if attrs['amount'] != attrs['order'].total_price:
+        order = attrs.get('order')
+        payment_type = attrs.get('payment_type')
+
+        if not order:
             raise serializers.ValidationError({
-                "amount": "Payment amount must match order total"
+                "order": "Order is required"
             })
+
+        if not payment_type:
+            raise serializers.ValidationError({
+                "payment_type": "Payment type is required"
+            })
+
         return attrs 

@@ -15,18 +15,67 @@ from .utils import generate_invoice_pdf
 from users.permissions import IsVerifiedUser
 
 class CartViewSet(viewsets.ModelViewSet):
-    # permission_classes = [IsAuthenticated]  # Comment out for now
-    permission_classes = [AllowAny]  # Allow all requests
+    permission_classes = [IsAuthenticated]  # Re-enable authentication
     serializer_class = CartSerializer
 
     def get_queryset(self):
-        # For development, return all carts
-        return Cart.objects.all()
-        # return Cart.objects.filter(user=self.request.user)  # Original line
+        return Cart.objects.filter(user=self.request.user)
 
-    @action(detail=True, methods=['post'])
-    def add_item(self, request, pk=None):
-        cart = self.get_object()
+    def create(self, request, *args, **kwargs):
+        # Get or create cart for the user
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        
+        # Get book_id and quantity from request
+        book_id = request.data.get('book_id')
+        quantity = int(request.data.get('quantity', 1))
+
+        try:
+            book = Book.objects.get(id=book_id)
+            
+            # Check stock
+            if book.stock < quantity:
+                return Response(
+                    {'error': f'Only {book.stock} copies available'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Get or create cart item
+            cart_item, created = CartItem.objects.get_or_create(
+                cart=cart,
+                book=book,
+                defaults={'quantity': quantity}
+            )
+
+            # If item already existed, update quantity
+            if not created:
+                cart_item.quantity += quantity
+                cart_item.save()
+
+            serializer = self.get_serializer(cart)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Book.DoesNotExist:
+            return Response(
+                {'error': 'Book not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @action(detail=False, methods=['get'])
+    def current(self, request):
+        """Get current user's cart"""
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        serializer = self.get_serializer(cart)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def add_item(self, request):
+        """Add item to current user's cart"""
+        cart, created = Cart.objects.get_or_create(user=request.user)
         book_id = request.data.get('book_id')
         quantity = int(request.data.get('quantity', 1))
 
@@ -40,27 +89,20 @@ class CartViewSet(viewsets.ModelViewSet):
 
             cart_item, created = CartItem.objects.get_or_create(
                 cart=cart,
-                book_id=book_id,
+                book=book,
                 defaults={'quantity': quantity}
             )
             if not created:
                 cart_item.quantity += quantity
                 cart_item.save()
 
-            return Response({
-                'status': 'success',
-                'message': 'Item added to cart',
-                'cart_item': CartItemSerializer(cart_item).data
-            })
+            serializer = self.get_serializer(cart)
+            return Response(serializer.data)
+
         except Book.DoesNotExist:
             return Response(
                 {'error': 'Book not found'},
                 status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
             )
 
     @action(detail=True, methods=['post'])
@@ -104,36 +146,48 @@ class CartViewSet(viewsets.ModelViewSet):
             )
 
 class OrderViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated, IsVerifiedUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = OrderSerializer
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        order = serializer.save(user=self.request.user)
-        cart = self.request.user.cart
+        # Get the user's current cart
+        cart = Cart.objects.get(user=self.request.user)
         
-        # Convert cart items to order details
-        for item in cart.items.all():
-            order.order_details.create(
-                book=item.book,
-                quantity=item.quantity,
-                price=item.book.price * item.quantity
+        # Create order
+        order = serializer.save(
+            user=self.request.user,
+            total_price=cart.total_price
+        )
+
+        # Create order details from cart items
+        for cart_item in cart.items.all():
+            # Calculate subtotal here instead of passing it
+            OrderDetail.objects.create(
+                order=order,
+                book=cart_item.book,
+                quantity=cart_item.quantity,
+                price=cart_item.book.price  # Store individual book price
             )
-        
+
         # Clear the cart
         cart.items.all().delete()
+
+        return order
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
         order = self.get_object()
-        if order.status == 'Pending':
-            order.status = 'Cancelled'
+        if order.status == 'PENDING':
+            order.status = 'CANCELLED'
             order.save()
             return Response({'status': 'Order cancelled'})
-        return Response({'error': 'Cannot cancel this order'}, 
-                       status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {'error': 'Order cannot be cancelled'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]

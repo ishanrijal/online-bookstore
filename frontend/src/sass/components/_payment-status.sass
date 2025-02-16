@@ -1,0 +1,88 @@
+.payment-status
+    padding: 4rem 0
+    min-height: calc(100vh - 200px)
+    background: #f8f9fa
+
+    &__container
+        max-width: 600px
+        margin: 0 auto
+        padding: 2rem
+        background: #fff
+        border-radius: 8px
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1)
+        text-align: center
+
+    &__icon
+        font-size: 4rem
+        margin-bottom: 1.5rem
+
+        i
+            &.fa-check-circle
+                color: #28a745
+            
+            &.fa-times-circle
+                color: #dc3545
+
+    h1
+        font-size: 2rem
+        margin-bottom: 1rem
+        color: #333
+
+    p
+        color: #666
+        margin-bottom: 2rem
+
+    &__details
+        text-align: left
+        margin: 2rem 0
+        padding: 1.5rem
+        background: #f8f9fa
+        border-radius: 4px
+
+        .detail-row
+            display: flex
+            justify-content: space-between
+            padding: 0.5rem 0
+            border-bottom: 1px solid #eee
+
+            &:last-child
+                border-bottom: none
+
+            span
+                &:first-child
+                    color: #666
+                
+                &:last-child
+                    font-weight: 500
+                    color: #333
+
+    &__actions
+        display: flex
+        gap: 1rem
+        justify-content: center
+        margin-top: 2rem
+
+        .btn
+            min-width: 150px
+
+    &--success
+        .payment-status__container
+            border-top: 4px solid #28a745
+
+    &--failure
+        .payment-status__container
+            border-top: 4px solid #dc3545
+
+@media (max-width: 768px)
+    .payment-status
+        padding: 2rem 0
+
+        &__container
+            margin: 0 1rem
+            padding: 1.5rem
+
+        &__actions
+            flex-direction: column
+            
+            .btn
+                width: 100% 

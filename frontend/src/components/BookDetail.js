@@ -1,61 +1,98 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import axios from '../utils/axios';
 import Header from './Header';
 import Footer from './Footer';
 import '../sass/components/_bookDetail.sass';
 
 const BookDetail = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [book, setBook] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isInCart, setIsInCart] = useState(false);
     const [notification, setNotification] = useState({ type: '', message: '' });
 
     useEffect(() => {
-        const fetchBook = async () => {
+        const fetchData = async () => {
             try {
-                const response = await axios.get(`http://127.0.0.1:8000/api/books/${id}/`);
-                setBook(response.data);
+                const [bookRes, cartRes] = await Promise.all([
+                    axios.get(`/books/${id}/`),
+                    axios.get('/orders/carts/current/')
+                ]);
+
+                setBook(bookRes.data);
+                // Check if book is in cart
+                const cartItems = cartRes.data.items || [];
+                setIsInCart(cartItems.some(item => item.book === parseInt(id)));
                 setLoading(false);
             } catch (error) {
-                setNotification({
-                    type: 'error',
-                    message: 'Failed to load book details'
-                });
+                if (error.response?.status !== 401) { // Ignore auth errors for cart
+                    setNotification({
+                        type: 'error',
+                        message: 'Failed to load book details'
+                    });
+                }
+                const bookRes = await axios.get(`/books/${id}/`);
+                setBook(bookRes.data);
                 setLoading(false);
             }
         };
 
-        fetchBook();
+        fetchData();
     }, [id]);
 
     const handleAddToCart = async () => {
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                setNotification({
-                    type: 'error',
-                    message: 'Please login to add items to cart'
-                });
-                return;
-            }
+            await axios.post('/orders/carts/add_item/', {
+                book_id: id,
+                quantity: 1
+            });
 
-            await axios.post(
-                'http://127.0.0.1:8000/api/orders/cart/add/',
-                { book_id: id, quantity: 1 },
-                {
-                    headers: { Authorization: `Bearer ${token}` }
-                }
-            );
-
+            setIsInCart(true);
             setNotification({
                 type: 'success',
                 message: 'Book added to cart successfully!'
             });
         } catch (error) {
+            let errorMessage = 'Failed to add book to cart';
+            
+            if (error.response?.status === 401) {
+                errorMessage = 'Please login to add items to cart';
+                navigate('/login');
+            } else if (error.response?.data?.error) {
+                errorMessage = error.response.data.error;
+            }
+            
             setNotification({
                 type: 'error',
-                message: error.response?.data?.message || 'Failed to add book to cart'
+                message: errorMessage
+            });
+        }
+    };
+
+    const handleRemoveFromCart = async () => {
+        try {
+            // First get the user's cart
+            const cartRes = await axios.get('/orders/carts/current/');
+            const cart = cartRes.data;
+            const cartItem = cart.items.find(item => item.book === parseInt(id));
+            
+            if (cartItem) {
+                // Use the correct endpoint with cart ID
+                await axios.post(`/orders/carts/${cart.id}/remove_item/`, {
+                    item_id: cartItem.id
+                });
+                setIsInCart(false);
+                setNotification({
+                    type: 'success',
+                    message: 'Book removed from cart successfully!'
+                });
+            }
+        } catch (error) {
+            setNotification({
+                type: 'error',
+                message: 'Failed to remove book from cart'
             });
         }
     };
@@ -108,13 +145,32 @@ const BookDetail = () => {
                                 <span className="out-of-stock">Out of Stock</span>
                             )}
                         </div>
-                        <button 
-                            className="add-to-cart-btn"
-                            onClick={handleAddToCart}
-                            disabled={book.stock === 0}
-                        >
-                            Add to Cart
-                        </button>
+                        <div className="book-detail__actions">
+                            {isInCart ? (
+                                <>
+                                    <button 
+                                        className="btn btn-danger"
+                                        onClick={handleRemoveFromCart}
+                                    >
+                                        Remove from Cart
+                                    </button>
+                                    <Link 
+                                        to="/cart" 
+                                        className="btn btn-primary"
+                                    >
+                                        View Cart
+                                    </Link>
+                                </>
+                            ) : (
+                                <button 
+                                    className="btn btn-primary"
+                                    onClick={handleAddToCart}
+                                    disabled={book?.stock === 0}
+                                >
+                                    {book?.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 

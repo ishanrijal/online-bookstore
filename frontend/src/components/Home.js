@@ -17,8 +17,8 @@ function Home() {
         const fetchData = async () => {
             try {
                 const [booksRes, categoriesRes] = await Promise.all([
-                    axios.get('http://127.0.0.1:8000/api/books/'),
-                    axios.get('http://127.0.0.1:8000/api/categories/')
+                    axios.get('/books/'),
+                    axios.get('/categories/')
                 ]);
 
                 setBooks(booksRes.data);
@@ -40,31 +40,29 @@ function Home() {
 
     const handleAddToCart = async (bookId) => {
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                setNotification({
-                    type: 'error',
-                    message: 'Please login to add items to cart'
-                });
-                return;
-            }
-
-            await axios.post(
-                'http://127.0.0.1:8000/api/orders/cart/',
-                { book_id: bookId, quantity: 1 },
-                {
-                    headers: { Authorization: `Bearer ${token}` }
-                }
-            );
+            await axios.post('/orders/carts/add_item/', {
+                book_id: bookId,
+                quantity: 1
+            });
 
             setNotification({
                 type: 'success',
                 message: 'Book added to cart successfully!'
             });
         } catch (error) {
+            let errorMessage = 'Failed to add book to cart';
+            
+            if (error.response?.status === 401) {
+                errorMessage = 'Please login to add items to cart';
+                // Optionally redirect to login
+                // navigate('/login');
+            } else if (error.response?.data?.error) {
+                errorMessage = error.response.data.error;
+            }
+            
             setNotification({
                 type: 'error',
-                message: error.response?.data?.message || 'Failed to add book to cart'
+                message: errorMessage
             });
         }
     };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axios';
 import Header from './Header';
 import Footer from './Footer';
 import '../sass/components/_cart.sass';
@@ -17,18 +17,14 @@ const Cart = () => {
 
     const fetchCart = async () => {
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/login');
-                return;
-            }
-
-            const response = await axios.get('http://127.0.0.1:8000/api/orders/carts/', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await axios.get('/orders/carts/current/');
             setCart(response.data);
             setLoading(false);
         } catch (error) {
+            if (error.response?.status === 401) {
+                navigate('/login');
+                return;
+            }
             setNotification({
                 type: 'error',
                 message: 'Failed to load cart'
@@ -39,32 +35,26 @@ const Cart = () => {
 
     const updateQuantity = async (itemId, newQuantity) => {
         try {
-            const token = localStorage.getItem('token');
-            await axios.patch(
-                `http://127.0.0.1:8000/api/orders/cart/items/${itemId}/`,
-                { quantity: newQuantity },
-                {
-                    headers: { Authorization: `Bearer ${token}` }
-                }
-            );
+            const cartId = cart.id;
+            await axios.post(`/orders/carts/${cartId}/update_quantity/`, {
+                item_id: itemId,
+                quantity: newQuantity
+            });
             fetchCart(); // Refresh cart after update
         } catch (error) {
             setNotification({
                 type: 'error',
-                message: error.response?.data?.message || 'Failed to update quantity'
+                message: error.response?.data?.error || 'Failed to update quantity'
             });
         }
     };
 
     const removeItem = async (itemId) => {
         try {
-            const token = localStorage.getItem('token');
-            await axios.delete(
-                `http://127.0.0.1:8000/api/orders/cart/items/${itemId}/`,
-                {
-                    headers: { Authorization: `Bearer ${token}` }
-                }
-            );
+            const cartId = cart.id;
+            await axios.post(`/orders/carts/${cartId}/remove_item/`, {
+                item_id: itemId
+            });
             fetchCart(); // Refresh cart after removal
             setNotification({
                 type: 'success',
@@ -76,6 +66,10 @@ const Cart = () => {
                 message: 'Failed to remove item'
             });
         }
+    };
+
+    const handleCheckout = () => {
+        navigate('/checkout');
     };
 
     if (loading) {
@@ -105,7 +99,7 @@ const Cart = () => {
                 <div className="cart__container">
                     <h1>Shopping Cart</h1>
                     
-                    {cart?.items_count === 0 ? (
+                    {!cart?.items?.length ? (
                         <div className="cart__empty">
                             <p>Your cart is empty</p>
                             <Link to="/" className="btn btn-primary">
@@ -115,7 +109,7 @@ const Cart = () => {
                     ) : (
                         <>
                             <div className="cart__items">
-                                {cart?.items.map(item => (
+                                {cart.items.map(item => (
                                     <div key={item.id} className="cart-item">
                                         <div className="cart-item__image">
                                             <img 
@@ -151,6 +145,7 @@ const Cart = () => {
                                         <button 
                                             className="cart-item__remove"
                                             onClick={() => removeItem(item.id)}
+                                            aria-label="Remove item"
                                         >
                                             ×
                                         </button>
@@ -161,8 +156,8 @@ const Cart = () => {
                             <div className="cart__summary">
                                 <div className="cart__summary-details">
                                     <div className="summary-row">
-                                        <span>Subtotal ({cart?.items_count} items):</span>
-                                        <span>₹{cart?.total_price}</span>
+                                        <span>Subtotal ({cart.items_count} items):</span>
+                                        <span>₹{cart.total_price}</span>
                                     </div>
                                     <div className="summary-row">
                                         <span>Shipping:</span>
@@ -170,12 +165,12 @@ const Cart = () => {
                                     </div>
                                     <div className="summary-row total">
                                         <span>Total:</span>
-                                        <span>₹{cart?.total_price}</span>
+                                        <span>₹{cart.total_price}</span>
                                     </div>
                                 </div>
                                 <button 
                                     className="btn btn-primary checkout-btn"
-                                    onClick={() => navigate('/checkout')}
+                                    onClick={handleCheckout}
                                 >
                                     Proceed to Checkout
                                 </button>
