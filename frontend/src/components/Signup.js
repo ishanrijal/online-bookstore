@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -22,54 +24,46 @@ const Signup = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
   const validateForm = () => {
     console.log("Starting form validation");
     const newErrors = {};
 
-    // Log current form data
-    console.log("Current form data:", formData);
-
+    // Required fields according to backend
     if (!formData.username.trim()) {
-      console.log("Username validation failed");
-      newErrors.username = 'Username is required';
+        newErrors.username = 'Username is required';
     }
 
     if (!formData.email.trim()) {
-      console.log("Email validation failed - empty");
-      newErrors.email = 'Email is required';
+        newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      console.log("Email validation failed - invalid format");
-      newErrors.email = 'Enter a valid email address';
+        newErrors.email = 'Enter a valid email address';
     }
 
     if (!formData.password.trim()) {
-      console.log("Password validation failed - empty");
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      console.log("Password validation failed - too short");
-      newErrors.password = 'Password must be at least 8 characters long';
+        newErrors.password = 'Password is required';
     }
 
-    if (!formData.first_name.trim()) {
-      console.log("First name validation failed");
-      newErrors.first_name = 'First name is required';
+    // Optional fields validation (only if they have a value)
+    if (formData.phone && formData.phone.length > 15) {
+        newErrors.phone = 'Phone number must be 15 characters or less';
     }
-    if (!formData.last_name.trim()) {
-      console.log("Last name validation failed");
-      newErrors.last_name = 'Last name is required';
+
+    if (formData.first_name && formData.first_name.length > 150) {
+        newErrors.first_name = 'First name must be 150 characters or less';
     }
-    if (!formData.phone.trim()) {
-      console.log("Phone validation failed");
-      newErrors.phone = 'Phone number is required';
-    }
-    if (!formData.address.trim()) {
-      console.log("Address validation failed");
-      newErrors.address = 'Address is required';
+
+    if (formData.last_name && formData.last_name.length > 150) {
+        newErrors.last_name = 'Last name must be 150 characters or less';
     }
 
     setErrors(newErrors);
-    console.log("Validation errors:", newErrors);
-    console.log("Validation result:", Object.keys(newErrors).length === 0);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -109,15 +103,12 @@ const Signup = () => {
     console.log("Form validation passed");
     setIsSubmitting(true);
     try {
-        // Create FormData object
         const submitData = new FormData();
-        
-        // Log the data being sent
-        console.log("Sending form data:", formData);
         
         // Add all form fields to FormData
         Object.keys(formData).forEach(key => {
-            if (formData[key] !== null) {
+            // Don't send null or empty values for optional fields
+            if (formData[key] !== null && formData[key] !== '') {
                 if (key === 'profile_picture' && formData[key] instanceof File) {
                     submitData.append(key, formData[key]);
                 } else {
@@ -138,21 +129,48 @@ const Signup = () => {
         );
 
         if (response.status === 201) {
-            setSuccessMessage('Account created successfully! Please verify your email before logging in.');
+            setSuccessMessage('Account created successfully!');
+            
+            // Store user data in localStorage
+            localStorage.setItem('user', JSON.stringify(response.data));
+            
+            // Role-based redirection
             setTimeout(() => {
-                navigate('/login');
-            }, 2000);
+                switch(formData.role) {
+                    case 'Admin':
+                        navigate('/admin');
+                        break;
+                    case 'Publisher':
+                    case 'Author':
+                    case 'Reader':
+                        navigate('/dashboard');
+                        break;
+                    default:
+                        navigate('/dashboard');
+                }
+            }, 1500);
         }
     } catch (error) {
         console.error('Registration error details:', error.response?.data);
-        const errorMessage = error.response?.data?.detail || 
-                          error.response?.data?.message ||
-                          'Registration failed. Please try again.';
-                          
-        if (error.response?.data?.errors) {
-            setErrors(error.response.data.errors);
+        
+        // Handle different types of error responses
+        if (error.response?.data) {
+            const errorData = error.response.data;
+            
+            // Handle field-specific errors
+            if (typeof errorData === 'object') {
+                const fieldErrors = {};
+                Object.keys(errorData).forEach(key => {
+                    fieldErrors[key] = Array.isArray(errorData[key]) 
+                        ? errorData[key][0] 
+                        : errorData[key];
+                });
+                setErrors(fieldErrors);
+            } else {
+                setErrors({ submit: 'Registration failed. Please try again.' });
+            }
         } else {
-            setErrors({ submit: errorMessage });
+            setErrors({ submit: 'Network error. Please try again.' });
         }
     } finally {
         setIsSubmitting(false);

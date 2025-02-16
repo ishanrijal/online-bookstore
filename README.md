@@ -233,7 +233,7 @@ python manage.py migrate
     DELETE: Used to remove a resource.
     Note
 
-
+/api/books/categories/
 
 
     https://www.figma.com/proto/enG2TiSd7m5pALWWfI43wm/Project-Wireframes?node-id=0-1&t=GeVJsEHcccffXUBj-1
