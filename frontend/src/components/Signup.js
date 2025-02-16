@@ -1,92 +1,161 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 import axios from 'axios';
 
 const Signup = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    fullName: '',
+    username: '',
     email: '',
     password: '',
-    confirmPassword: '',
+    role: 'Reader',
+    first_name: '',
+    last_name: '',
     phone: '',
     address: '',
-    role: 'Reader', // Default role
-    agreeToTerms: false,
+    profile_picture: null,
   });
 
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
+    console.log("Starting form validation");
     const newErrors = {};
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required.';
+    // Log current form data
+    console.log("Current form data:", formData);
+
+    if (!formData.username.trim()) {
+      console.log("Username validation failed");
+      newErrors.username = 'Username is required';
     }
+
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required.';
+      console.log("Email validation failed - empty");
+      newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Enter a valid email address.';
+      console.log("Email validation failed - invalid format");
+      newErrors.email = 'Enter a valid email address';
     }
+
     if (!formData.password.trim()) {
-      newErrors.password = 'Password is required.';
+      console.log("Password validation failed - empty");
+      newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long.';
+      console.log("Password validation failed - too short");
+      newErrors.password = 'Password must be at least 8 characters long';
     }
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match.';
+
+    if (!formData.first_name.trim()) {
+      console.log("First name validation failed");
+      newErrors.first_name = 'First name is required';
+    }
+    if (!formData.last_name.trim()) {
+      console.log("Last name validation failed");
+      newErrors.last_name = 'Last name is required';
     }
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required.';
-    } else if (!/^\d{10,15}$/.test(formData.phone)) {
-      newErrors.phone = 'Enter a valid phone number (10-15 digits).';
+      console.log("Phone validation failed");
+      newErrors.phone = 'Phone number is required';
     }
     if (!formData.address.trim()) {
-      newErrors.address = 'Address is required.';
-    }
-    if (!formData.agreeToTerms) {
-      newErrors.agreeToTerms = 'You must agree to the Terms & Conditions.';
+      console.log("Address validation failed");
+      newErrors.address = 'Address is required';
     }
 
     setErrors(newErrors);
+    console.log("Validation errors:", newErrors);
+    console.log("Validation result:", Object.keys(newErrors).length === 0);
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        setErrors(prev => ({
+          ...prev,
+          profile_picture: 'File size should be less than 5MB'
+        }));
+        return;
+      }
+      setFormData(prev => ({
+        ...prev,
+        profile_picture: file
+      }));
+      setErrors(prev => ({
+        ...prev,
+        profile_picture: null
+      }));
+    }
+  };
+
   const handleSubmit = async (e) => {
+    console.log("Form submission started");
     e.preventDefault();
-
-    if (!validateForm()) return;
-
+    
+    const isValid = validateForm();
+    console.log("Form validation result:", isValid);
+    
+    if (!isValid || isSubmitting) {
+        console.log("Form submission stopped - validation failed or already submitting");
+        return;
+    }
+    
+    console.log("Form validation passed");
+    setIsSubmitting(true);
     try {
-      const response = await axios.post('http://localhost:8001/api/signup/', {
-        username: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-        contact: formData.phone,
-        address: formData.address,
-        role: formData.role,
-      });
-      if (response.status === 201) {
-        setSuccessMessage('Account created successfully! You can now log in.');
-        alert('Account created successfully! You can now log in.');
-        setFormData({
-          fullName: '',
-          email: '',
-          password: '',
-          confirmPassword: '',
-          phone: '',
-          address: '',
-          role: 'Reader',
-          agreeToTerms: false,
+        // Create FormData object
+        const submitData = new FormData();
+        
+        // Log the data being sent
+        console.log("Sending form data:", formData);
+        
+        // Add all form fields to FormData
+        Object.keys(formData).forEach(key => {
+            if (formData[key] !== null) {
+                if (key === 'profile_picture' && formData[key] instanceof File) {
+                    submitData.append(key, formData[key]);
+                } else {
+                    submitData.append(key, formData[key]);
+                }
+            }
         });
-      }
+
+        const response = await axios.post(
+            'http://127.0.0.1:8000/api/users/', 
+            submitData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Accept': 'application/json',
+                },
+            }
+        );
+
+        if (response.status === 201) {
+            setSuccessMessage('Account created successfully! Please verify your email before logging in.');
+            setTimeout(() => {
+                navigate('/login');
+            }, 2000);
+        }
     } catch (error) {
-      if (error.response && error.response.data) {
-        setErrors({ server: error.response.data.message || 'An error occurred. Please try again.' });
-      } else {
-        setErrors({ server: 'Network error. Please check your connection.' });
-      }
+        console.error('Registration error details:', error.response?.data);
+        const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message ||
+                          'Registration failed. Please try again.';
+                          
+        if (error.response?.data?.errors) {
+            setErrors(error.response.data.errors);
+        } else {
+            setErrors({ submit: errorMessage });
+        }
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -104,26 +173,26 @@ const Signup = () => {
       <main className="signup-page">
         <div className="container">
           <div className="signup-wrapper">
-            <form onSubmit={handleSubmit} className="signup-form">
+            <form onSubmit={handleSubmit} className="signup-form" encType="multipart/form-data" noValidate>
               <div className="form-header">
                 <h2>Create Account</h2>
                 <p className="subtitle">Join our book-loving community</p>
               </div>
 
-              {errors.server && <p className="error">{errors.server}</p>}
-              {successMessage && <p className="success">{successMessage}</p>}
+              {errors.submit && <div className="error-message">{errors.submit}</div>}
+              {successMessage && <div className="success-message">{successMessage}</div>}
 
               <div className="form-body">
                 <div className="input-field">
                   <input
                     type="text"
-                    name="fullName"
-                    value={formData.fullName}
+                    name="username"
+                    value={formData.username}
                     onChange={handleChange}
                     required
                   />
-                  <label htmlFor="fullName">Full Name</label>
-                  {errors.fullName && <p className="error">{errors.fullName}</p>}
+                  <label htmlFor="username">Username</label>
+                  {errors.username && <p className="error">{errors.username}</p>}
                 </div>
 
                 <div className="input-field">
@@ -152,14 +221,26 @@ const Signup = () => {
 
                 <div className="input-field">
                   <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
+                    type="text"
+                    name="first_name"
+                    value={formData.first_name}
                     onChange={handleChange}
                     required
                   />
-                  <label htmlFor="confirmPassword">Confirm Password</label>
-                  {errors.confirmPassword && <p className="error">{errors.confirmPassword}</p>}
+                  <label htmlFor="first_name">First Name</label>
+                  {errors.first_name && <p className="error">{errors.first_name}</p>}
+                </div>
+
+                <div className="input-field">
+                  <input
+                    type="text"
+                    name="last_name"
+                    value={formData.last_name}
+                    onChange={handleChange}
+                    required
+                  />
+                  <label htmlFor="last_name">Last Name</label>
+                  {errors.last_name && <p className="error">{errors.last_name}</p>}
                 </div>
 
                 <div className="input-field">
@@ -195,25 +276,30 @@ const Signup = () => {
                     <option value="Reader">Reader</option>
                     <option value="Author">Author</option>
                     <option value="Publisher">Publisher</option>
+                    <option value="Admin">Admin</option>
                   </select>
                   <label htmlFor="role">Role</label>
                 </div>
 
-                <div className="terms-checkbox">
+                <div className="input-field">
                   <input
-                    type="checkbox"
-                    name="agreeToTerms"
-                    checked={formData.agreeToTerms}
-                    onChange={handleChange}
-                    required
+                    type="file"
+                    name="profile_picture"
+                    onChange={handleFileChange}
                   />
-                  <label htmlFor="agreeToTerms">I agree to the Terms & Conditions</label>
-                  {errors.agreeToTerms && <p className="error">{errors.agreeToTerms}</p>}
+                  <label htmlFor="profile_picture">Profile Picture</label>
+                  {errors.profile_picture && <p className="error">{errors.profile_picture}</p>}
                 </div>
               </div>
 
               <div className="form-footer">
-                <button type="submit">Create Account</button>
+                <button 
+                  type="submit" 
+                  className="submit-btn" 
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Creating Account...' : 'Create Account'}
+                </button>
               </div>
             </form>
           </div>

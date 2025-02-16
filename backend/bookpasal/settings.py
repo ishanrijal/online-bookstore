@@ -73,8 +73,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:8001",
+    "http://localhost:4001",  # Update this to match your React port
+    "http://127.0.0.1:4001",
 ]
 
 CORS_ALLOW_METHODS = [
@@ -84,6 +84,18 @@ CORS_ALLOW_METHODS = [
     'PATCH',
     'POST',
     'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]
 
 ROOT_URLCONF = 'bookpasal.urls'
@@ -192,13 +204,14 @@ SIMPLE_JWT = {
 }
 
 # Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your-email@gmail.com'  # Need to here
-EMAIL_HOST_USER_PASSWORD = 'your-app-password'  # Need to replace here.
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # This will print emails to console
 
+# Comment out all SMTP settings for now
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'your-app-password'
 
-#remove after development is done
+# For development
 DUMMY_TOKEN = "dummy_token_for_development"
