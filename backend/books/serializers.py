@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Book, Author, Publisher
+from .models import Book, Author, Publisher, Category
 
 class PublisherSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,13 +11,35 @@ class AuthorSerializer(serializers.ModelSerializer):
         model = Author
         fields = '__all__'
 
+class CategorySerializer(serializers.ModelSerializer):
+    book_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'slug', 'description', 'book_count', 'created_at', 'updated_at']
+        read_only_fields = ['slug', 'book_count']
+
+    def get_book_count(self, obj):
+        return obj.books.count()
+
 class BookSerializer(serializers.ModelSerializer):
     publisher_details = PublisherSerializer(source='publisher', read_only=True)
     authors_details = AuthorSerializer(source='authors', many=True, read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
 
     class Meta:
         model = Book
-        fields = '__all__'
+        fields = [
+            'id', 'title', 'author', 'publisher', 'category', 'category_name',
+            'created_at', 
+            'updated_at',
+            'authors',  # Make authors read-only for now
+            'publisher_details',
+            'authors_details',
+            'average_rating',
+            'total_reviews',
+            'favorited_by'
+        ]
         read_only_fields = [
             'created_at', 
             'updated_at',

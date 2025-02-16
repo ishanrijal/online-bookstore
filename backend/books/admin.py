@@ -1,12 +1,26 @@
 from django.contrib import admin
-from .models import Book, Author, Publisher
+from .models import Book, Author, Publisher, Category
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'book_count', 'created_at', 'updated_at')
+    search_fields = ('name', 'description')
+    readonly_fields = ('slug',)
+
+    def book_count(self, obj):
+        return obj.books.count()
+    book_count.short_description = 'Number of Books'
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'isbn', 'price', 'stock', 'category', 'language')
-    list_filter = ('category', 'language', 'publisher')
-    search_fields = ('title', 'isbn', 'description')
-    ordering = ('title',)
+    list_display = ('title', 'get_authors', 'publisher', 'category', 'price', 'stock')
+    list_filter = ('category', 'publisher', 'language')
+    search_fields = ('title', 'isbn', 'description', 'authors__user__username')
+    filter_horizontal = ('authors', 'favorited_by')
+
+    def get_authors(self, obj):
+        return ", ".join([author.user.username for author in obj.authors.all()])
+    get_authors.short_description = 'Authors'
 
 @admin.register(Author)
 class AuthorAdmin(admin.ModelAdmin):

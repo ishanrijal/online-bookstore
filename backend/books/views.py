@@ -6,15 +6,17 @@ from rest_framework.response import Response
 from rest_framework.permissions import (
     IsAuthenticated, 
     AllowAny,
-    IsAuthenticatedOrReadOnly
+    IsAuthenticatedOrReadOnly,
+    IsAdminUser
 )
 from django.db.models import Q
-from .models import Book, Author, Publisher
-from .serializers import BookSerializer, AuthorSerializer, PublisherSerializer
+from .models import Book, Author, Publisher, Category
+from .serializers import BookSerializer, AuthorSerializer, PublisherSerializer, CategorySerializer
 from users.permissions import IsAdminOrPublisher
 from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.views import TokenObtainPairView
 import json
+from rest_framework import serializers
 
 # Create your views here.
 
@@ -121,6 +123,20 @@ class BookViewSet(viewsets.ModelViewSet):
                 "message": f"Failed to delete book: {str(e)}"
             }, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['get'])
+    def by_category(self, request):
+        category_slug = request.query_params.get('category', '')
+        try:
+            category = Category.objects.get(slug=category_slug)
+            books = self.queryset.filter(category=category)
+            serializer = self.get_serializer(books, many=True)
+            return Response(serializer.data)
+        except Category.DoesNotExist:
+            return Response(
+                {"error": "Category not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
 class AuthorViewSet(viewsets.ModelViewSet):
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
@@ -130,3 +146,18 @@ class PublisherViewSet(viewsets.ModelViewSet):
     queryset = Publisher.objects.all()
     serializer_class = PublisherSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAdminUser]
+    lookup_field = 'slug'
+
+    def perform_destroy(self, instance):
+        # Move books to uncategorized before deleting
+        if instance.name.lower() != 'uncategorized':
+            default_category = Category.get_default_category()
+            instance.books.update(category_id=default_category)
+            instance.delete()
+        else:
+            raise serializers.ValidationError("Cannot delete the Uncategorized category")

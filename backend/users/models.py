@@ -16,9 +16,13 @@ class User(AbstractUser):
     address = models.TextField(blank=True, null=True)
     profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
     is_email_verified = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     email_verification_token = models.UUIDField(default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    USERNAME_FIELD = 'username'  # Change this to use username as primary identifier
+    REQUIRED_FIELDS = ['email']  # Make sure email is required
 
     def __str__(self):
         return self.username

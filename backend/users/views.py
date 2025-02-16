@@ -1,18 +1,56 @@
 from django.shortcuts import render
-from rest_framework import viewsets, status, generics
+from rest_framework import viewsets, status, generics, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework_simplejwt.views import TokenObtainPairView
-from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import get_user_model, authenticate
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import User, EmailVerificationToken
 from .serializers import (UserSerializer, CustomTokenObtainPairSerializer, 
                          UserProfileUpdateSerializer)
 from .permissions import IsAdminOrPublisher, IsOwnerOrReadOnly
+from django.db.models import Q
 
 User = get_user_model()
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate(self, attrs):
+        identifier = attrs.get('username')
+        password = attrs.get('password')
+
+        if not identifier or not password:
+            raise serializers.ValidationError({
+                'error': 'Both username/email and password are required.'
+            })
+
+        # Try to find user by either username or email
+        try:
+            user = User.objects.get(Q(username=identifier) | Q(email=identifier))
+        except User.DoesNotExist:
+            raise serializers.ValidationError({
+                'error': 'No account found with the given credentials'
+            })
+
+        # Try to authenticate
+        authenticated_user = authenticate(
+            request=self.context.get('request'),
+            username=user.username,
+            password=password
+        )
+
+        if not authenticated_user:
+            raise serializers.ValidationError({
+                'error': 'Invalid password'
+            })
+
+        attrs['username'] = user.username
+        return super().validate(attrs)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
