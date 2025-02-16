@@ -30,6 +30,8 @@ A full-stack web application built with Django and React for managing an online 
     ```bash
     For Linux/Mac: source env/bin/activate
     For Window: .\env\Scripts\activate
+    GIT BASH: source env/Scripts/activate
+
 4. Install the packages/ dependencies:
     ```bash
     pip install -r requirements.txt
@@ -230,3 +232,8 @@ python manage.py migrate
     PUT: Used to update an existing resource.
     DELETE: Used to remove a resource.
     Note
+
+
+
+
+    https://www.figma.com/proto/enG2TiSd7m5pALWWfI43wm/Project-Wireframes?node-id=0-1&t=GeVJsEHcccffXUBj-1

@@ -21,16 +21,21 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    # def get_permissions(self):
+    #     if self.action in ['create']:
+    #         permission_classes = []  # Allow anyone to register
+    #     elif self.action in ['update', 'partial_update', 'destroy']:
+    #         permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    #     elif self.action in ['list']:
+    #         permission_classes = [IsAuthenticated, IsAdminOrPublisher]  # Only admin/publisher can list all users
+    #     else:
+    #         permission_classes = [IsAuthenticated]
+    #     return [permission() for permission in permission_classes]
+
+    
     def get_permissions(self):
-        if self.action in ['create']:
-            permission_classes = []  # Allow anyone to register
-        elif self.action in ['update', 'partial_update', 'destroy']:
-            permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
-        elif self.action in ['list']:
-            permission_classes = [IsAuthenticated, IsAdminOrPublisher]  # Only admin/publisher can list all users
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
+        print(self.request.META.get('HTTP_AUTHORIZATION'))
+        return [AllowAny()]
 
     @action(detail=False, methods=['put'], permission_classes=[IsAuthenticated])
     def profile(self, request):

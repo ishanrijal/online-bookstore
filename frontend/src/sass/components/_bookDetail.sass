@@ -1,0 +1,154 @@
+@use '../utils/variables' as *
+@use '../utils/mixins' as *
+
+.book-detail
+    padding: 2rem
+    max-width: 1200px
+    margin: 0 auto
+    background: #fff
+    border-radius: 8px
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1)
+
+    &__header
+        display: grid
+        grid-template-columns: 300px 1fr
+        gap: 2rem
+        margin-bottom: 3rem
+
+    &__cover
+        img
+            width: 100%
+            height: auto
+            border-radius: 8px
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15)
+
+    &__info
+        h1
+            font-size: 2.5rem
+            margin-bottom: 1rem
+            color: $primary-color
+
+    &__meta
+        display: flex
+        gap: 1.5rem
+        margin-bottom: 2rem
+        color: $text-muted
+        font-size: 0.9rem
+
+    &__authors
+        margin: 2rem 0
+        
+        .authors-list
+            display: grid
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr))
+            gap: 1rem
+            margin-top: 1rem
+
+        .author-card
+            display: flex
+            align-items: center
+            gap: 1rem
+            padding: 1rem
+            background: $bg-light
+            border-radius: 8px
+            
+            img
+                width: 60px
+                height: 60px
+                border-radius: 50%
+                object-fit: cover
+
+            .author-info
+                h4
+                    margin: 0
+                    color: $text-primary
+                p
+                    margin: 0.25rem 0 0
+                    color: $text-muted
+                    font-size: 0.9rem
+
+    &__content
+        display: grid
+        grid-template-columns: 2fr 1fr
+        gap: 2rem
+
+    &__description
+        h2
+            color: $text-primary
+            margin-bottom: 1rem
+        p
+            line-height: 1.6
+            color: $text-secondary
+
+    &__specs
+        table
+            width: 100%
+            border-collapse: collapse
+            
+            td
+                padding: 0.75rem
+                border-bottom: 1px solid $border-color
+                
+                &:first-child
+                    font-weight: 500
+                    color: $text-primary
+                    width: 40%
+
+    &__reviews
+        grid-column: 1 / -1
+        margin-top: 2rem
+
+        .reviews-list
+            display: grid
+            gap: 1rem
+            margin-top: 1rem
+
+        .review-card
+            padding: 1.5rem
+            background: $bg-light
+            border-radius: 8px
+            
+            .review-header
+                display: flex
+                justify-content: space-between
+                margin-bottom: 0.5rem
+                
+                .reviewer
+                    font-weight: 500
+                    color: $text-primary
+                
+                .rating
+                    color: $star-color
+            
+            .review-content
+                margin: 0.5rem 0
+                color: $text-secondary
+                line-height: 1.5
+            
+            .review-date
+                display: block
+                font-size: 0.85rem
+                color: $text-muted
+                text-align: right
+
+    .add-to-cart-btn
+        margin-top: 2rem
+        padding: 1rem 2rem
+        background: $primary-color
+        color: white
+        border: none
+        border-radius: 8px
+        font-size: 1rem
+        cursor: pointer
+        transition: background-color 0.3s
+        
+        &:hover
+            background: darken($primary-color, 10%)
+
+@media (max-width: 768px)
+    .book-detail
+        &__header
+            grid-template-columns: 1fr
+            
+        &__content
+            grid-template-columns: 1fr 

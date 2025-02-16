@@ -68,19 +68,10 @@ function AddBook() {
         };
 
         try {
-            const token = localStorage.getItem('token'); // Get the token from local storage    
-            console.log(token);
-            console.log(newBook);
-            const response = await axios.post('http://127.0.0.1:8000/api/books/books/', newBook, {
-                // headers: {
-                //     'Content-Type': 'application/json',
-                //     'Authorization': `Bearer ${token}`, // Include the token in the headers
-                // },
-            });
-            navigate('/admin/manage-books'); // Redirect to manage books
+            await axios.post('http://127.0.0.1:8000/api/books/books/', newBook);
+            navigate('/admin/manage-books');
         } catch (error) {
             console.error('Error adding book:', error);
-            // Handle error (e.g., show a notification)
         }
     };
 

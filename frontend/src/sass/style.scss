@@ -1,8 +1,39 @@
-// all
-@use 'utils/all.sass' as utilsAll;
-@use 'base/all.sass' as baseAll;
-@use 'components/all.sass' as componentAll;
-@use 'layouts/all.sass' as layoutsAll;
-@use 'pages/all.sass' as pagesAll;
-@use 'themes/all.sass' as themesAll;
-@use 'vendors/all.sass' as vendorAll;
+// Base
+@use 'base/global';
+@use 'base/helpers';
+@use 'base/normalize';
+@use 'base/reset';
+@use 'base/typography';
+
+// Utils
+@use 'utils/variables';
+@use 'utils/mixins';
+@use 'utils/functions';
+
+// Layouts
+@use 'layouts/footer';
+@use 'layouts/grid';
+@use 'layouts/header';
+@use 'layouts/navigation';
+@use 'layouts/tables';
+
+// Components
+@use 'components/banner';
+@use 'components/buttons';
+@use 'components/cards';
+@use 'components/carousel';
+@use 'components/dropdown';
+@use 'components/login-form';
+@use 'components/bookList';
+@use 'components/categoryList';
+@use 'components/featuredBooks';
+@use 'components/editBook';
+@use 'components/loadingBox';
+@use 'components/notificationBox';
+@use 'components/bookDetail';
+
+// Pages
+@use 'pages/signup';
+
+// Themes
+@use 'themes/overlay';

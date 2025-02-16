@@ -1,0 +1,73 @@
+.admin-table
+    width: 100%
+    background: #fff
+    border-collapse: collapse
+    margin: 1rem 0
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1)
+
+    thead
+        background: #f8f9fa
+
+        th
+            padding: 12px
+            text-align: left
+            font-weight: 500
+            color: #333
+            border-bottom: 1px solid #dee2e6
+
+    tbody
+        tr
+            &:hover
+                background: #f8f9fa
+
+            td
+                padding: 12px
+                border-bottom: 1px solid #dee2e6
+                color: #444
+
+    .actions
+        display: flex
+        gap: 8px
+
+        a, button
+            padding: 6px 12px
+            border-radius: 4px
+            font-size: 14px
+            text-decoration: none
+            transition: all 0.2s
+
+        a
+            &:hover
+                text-decoration: underline
+
+        button
+            background: #dc3545
+            color: #fff
+            border: none
+            cursor: pointer
+
+            &:hover
+                background: #c82333
+
+.admin-header
+    display: flex
+    justify-content: space-between
+    align-items: center
+    margin-bottom: 2rem
+
+    h2
+        color: #333
+        font-size: 1.5rem
+        margin: 0
+
+    .new-book-button
+        display: inline-block
+        padding: 8px 16px
+        background: #007bff
+        color: #fff
+        border-radius: 4px
+        text-decoration: none
+        transition: background 0.2s
+
+        &:hover
+            background: #0056b3

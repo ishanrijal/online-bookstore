@@ -14,6 +14,7 @@ from .serializers import BookSerializer, AuthorSerializer, PublisherSerializer
 from users.permissions import IsAdminOrPublisher
 from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.views import TokenObtainPairView
+import json
 
 # Create your views here.
 
@@ -23,21 +24,13 @@ class BookViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'isbn', 'authors__user__username', 'category']
     ordering_fields = ['price', 'created_at', 'average_rating']
-
-    # def get_permissions(self):
-    #     # Allow all actions without authentication for development
-    #     permission_classes = [AllowAny]
-    #     return [permission() for permission in permission_classes]
-    #     # @todo  Remove above line after development is done... 
-    #     if self.action in ['create', 'update', 'partial_update', 'destroy']:
-    #         permission_classes = [IsAuthenticated, IsAdminOrPublisher]
-    #     else:
-    #         permission_classes = [AllowAny]
-    #     return [permission() for permission in permission_classes]
-
+    permission_classes = [AllowAny]  # Temporarily allow all actions
 
     def get_permissions(self):
-        print(self.request.META.get('HTTP_AUTHORIZATION'))
+        # Debug print statements
+        print("Request method:", self.request.method)
+        print("Authorization header:", self.request.META.get('HTTP_AUTHORIZATION'))
+        print("User:", self.request.user)
         return [AllowAny()]
 
     @action(detail=True, methods=['post'])
@@ -78,6 +71,55 @@ class BookViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(recommended_books, many=True)
         return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        # Handle file upload
+        if 'cover_image' in request.FILES:
+            # Delete old image if it exists
+            if instance.cover_image:
+                instance.cover_image.delete()
+            
+            instance.cover_image = request.FILES['cover_image']
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        return Response(serializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
+        # Same debug information for PATCH requests
+        print("\n=== Debug Information (PATCH) ===")
+        print("Request method:", request.method)
+        print("Request data:", request.data)
+        print("Content type:", request.content_type)
+        
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        print("\n=== Delete Operation Debug Info ===")
+        print("Request method:", request.method)
+        print("Book ID:", kwargs.get('pk'))
+        
+        try:
+            instance = self.get_object()
+            book_title = instance.title  # Save title before deletion
+            self.perform_destroy(instance)
+            
+            return Response({
+                "status": "success",
+                "message": f"Book '{book_title}' was successfully deleted"
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print("Delete Error:", str(e))
+            return Response({
+                "status": "error",
+                "message": f"Failed to delete book: {str(e)}"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 class AuthorViewSet(viewsets.ModelViewSet):
     queryset = Author.objects.all()

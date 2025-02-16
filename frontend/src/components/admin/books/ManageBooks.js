@@ -4,25 +4,14 @@ import axios from 'axios';
 
 function ManageBooks() {
     const [books, setBooks] = useState([]);
-    const mockLogin = () => {
-        const token = "dummy_token_for_development"; // Your dummy token
-        localStorage.setItem('token', token);
-    };
+    
     useEffect(() => {
         const fetchBooks = async () => {
             try {
-                mockLogin();
-                const token = localStorage.getItem('token'); // Get the token from local storage
-                console.log(token);
-                const response = await axios.get('http://127.0.0.1:8000/api/books/books', {
-                    // headers: {
-                    //     'Authorization': `Bearer ${token}`, // Include the token in the headers
-                    // },
-                });
-                setBooks(response.data); // Set the fetched books to state
+                const response = await axios.get('http://127.0.0.1:8000/api/books/books');
+                setBooks(response.data);
             } catch (error) {
                 console.error('Error fetching books:', error);
-                // Handle error (e.g., show a notification)
             }
         };
 
@@ -30,30 +19,39 @@ function ManageBooks() {
     }, []);
 
     const handleDelete = async (id) => {
-        // Show confirmation dialog
         const confirmDelete = window.confirm("Do you want to delete this book permanently?");
         if (confirmDelete) {
             try {
-                const token = localStorage.getItem('token'); // Get the token from local storage
-                await axios.delete(`http://127.0.0.1:8000/api/books/books/${id}/`, {
+                const token = localStorage.getItem('token');
+                const response = await axios.delete(`http://127.0.0.1:8000/api/books/books/${id}/`, {
                     // headers: {
-                    //     'Authorization': `Bearer ${token}`, // Include the token in the headers
+                    //     'Authorization': `Bearer ${token}`,
                     // },
                 });
-                setBooks(books.filter(book => book.id !== id)); // Remove the deleted book from state
+
+                if (response.data.status === 'success') {
+                    // Remove the book from state
+                    setBooks(books.filter(book => book.id !== id));
+                    // Show success message (you can implement a notification system)
+                    console.log(response.data.message);
+                }
             } catch (error) {
                 console.error('Error deleting book:', error);
-                // Handle error (e.g., show a notification)
+                const errorMessage = error.response?.data?.message || 'Error deleting book';
+                // Show error message to user (you can implement a notification system)
+                alert(errorMessage);
             }
         }
     };
 
 
     return (
-        <div>
-            <h2>Manage Books</h2>
-            <Link to="/admin/manage-books/new" className="new-book-button">New Book</Link>
-            <table className="book-table">
+        <div className="admin-book-list-wrapper">
+            <div className="admin-header">
+                <h2>Manage Books</h2>
+                <Link to="/admin/manage-books/new" className="new-book-button">Add New Book</Link>
+            </div>
+            <table className="admin-table">
                 <thead>
                     <tr>
                         <th>Title</th>
@@ -70,7 +68,7 @@ function ManageBooks() {
                             <td>{book.isbn}</td>
                             <td>${book.price}</td>
                             <td>{book.stock}</td>
-                            <td>
+                            <td className="actions">
                                 <Link to={`/admin/manage-books/${book.id}`}>View</Link>
                                 <Link to={`/admin/manage-books/edit/${book.id}`}>Edit</Link>
                                 <button onClick={() => handleDelete(book.id)}>Delete</button>

@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Review, Wishlist
 from .serializers import ReviewSerializer, WishlistSerializer
 from .permissions import IsOwnerOrReadOnly
@@ -15,7 +15,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
+        # Allow unauthenticated access to list, retrieve, and book_reviews actions
+        if self.action in ['list', 'retrieve', 'book_reviews']:
             permission_classes = [AllowAny]
         else:
             permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
@@ -27,6 +28,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def book_reviews(self, request):
         book_id = request.query_params.get('book_id')
+        if not book_id:
+            return Response(
+                {"error": "book_id parameter is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         reviews = Review.objects.filter(book_id=book_id)
         serializer = self.get_serializer(reviews, many=True)
         return Response(serializer.data)
