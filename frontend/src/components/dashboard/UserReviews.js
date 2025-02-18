@@ -3,6 +3,7 @@ import axios from '../../utils/axios';
 import StarRating from '../reviews/StarRating';
 import LoadingBox from '../common/LoadingBox';
 import NotificationBox from '../common/NotificationBox';
+import LoaderModal from '../common/LoaderModal';
 import '../../sass/components/_user-reviews.sass';
 
 const UserReviews = () => {
@@ -14,14 +15,57 @@ const UserReviews = () => {
         rating: 0,
         comment: ''
     });
+    const [filters, setFilters] = useState({
+        rating: '',
+        dateRange: ''
+    });
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         fetchUserReviews();
-    }, []);
+    }, [filters]);
 
     const fetchUserReviews = async () => {
         try {
-            const response = await axios.get('/reviews/reviews/');
+            let url = '/reviews/reviews/';
+            const params = new URLSearchParams();
+
+            if (filters.rating) {
+                params.append('rating__exact', filters.rating);
+            }
+
+            if (filters.dateRange) {
+                const now = new Date();
+                let startDate;
+
+                switch (filters.dateRange) {
+                    case 'today':
+                        startDate = new Date();
+                        startDate.setHours(0, 0, 0, 0);
+                        params.append('created_at__gte', startDate.toISOString());
+                        params.append('created_at__lt', new Date().toISOString());
+                        break;
+                    case 'week':
+                        startDate = new Date();
+                        startDate.setDate(startDate.getDate() - 7);
+                        params.append('created_at__gte', startDate.toISOString());
+                        params.append('created_at__lt', new Date().toISOString());
+                        break;
+                    case 'month':
+                        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                        params.append('created_at__gte', startDate.toISOString());
+                        params.append('created_at__lt', new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString());
+                        break;
+                    case 'year':
+                        startDate = new Date(now.getFullYear(), 0, 1);
+                        params.append('created_at__gte', startDate.toISOString());
+                        params.append('created_at__lt', new Date(now.getFullYear() + 1, 0, 0).toISOString());
+                        break;
+                }
+            }
+
+            const queryString = params.toString();
+            const response = await axios.get(`${url}${queryString ? `?${queryString}` : ''}`);
             setReviews(response.data);
             setLoading(false);
         } catch (error) {
@@ -47,6 +91,7 @@ const UserReviews = () => {
     };
 
     const handleUpdateReview = async (reviewId) => {
+        setSubmitting(true);
         try {
             await axios.patch(`/reviews/reviews/${reviewId}/`, editForm);
             setNotification({
@@ -60,6 +105,8 @@ const UserReviews = () => {
                 type: 'error',
                 message: error.response?.data?.message || 'Failed to update review'
             });
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -68,6 +115,7 @@ const UserReviews = () => {
             return;
         }
 
+        setSubmitting(true);
         try {
             await axios.delete(`/reviews/reviews/${reviewId}/`);
             setNotification({
@@ -78,17 +126,57 @@ const UserReviews = () => {
         } catch (error) {
             setNotification({
                 type: 'error',
-                message: 'Failed to delete review'
+                message: error.response?.data?.message || 'Failed to delete review'
             });
+        } finally {
+            setSubmitting(false);
         }
+    };
+
+    const handleFilterChange = (filterType, value) => {
+        setFilters(prev => ({
+            ...prev,
+            [filterType]: value
+        }));
     };
 
     if (loading) return <LoadingBox message="Loading your reviews..." />;
 
     return (
         <div className="user-reviews">
+            {submitting && <LoaderModal message="Processing..." />}
+            
             <div className="user-reviews__header">
                 <h2>My Reviews</h2>
+                <div className="filters">
+                    <div className="filter-group">
+                        <label>Filter by Rating:</label>
+                        <select 
+                            value={filters.rating}
+                            onChange={(e) => handleFilterChange('rating', e.target.value)}
+                        >
+                            <option value="">All Ratings</option>
+                            <option value="1">1 Star</option>
+                            <option value="2">2 Stars</option>
+                            <option value="3">3 Stars</option>
+                            <option value="4">4 Stars</option>
+                            <option value="5">5 Stars</option>
+                        </select>
+                    </div>
+                    <div className="filter-group">
+                        <label>Filter by Date:</label>
+                        <select 
+                            value={filters.dateRange}
+                            onChange={(e) => handleFilterChange('dateRange', e.target.value)}
+                        >
+                            <option value="">Any Date</option>
+                            <option value="today">Today</option>
+                            <option value="week">Past 7 days</option>
+                            <option value="month">This Month</option>
+                            <option value="year">This Year</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             {notification.message && (

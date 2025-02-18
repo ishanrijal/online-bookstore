@@ -8,11 +8,44 @@
 
     &__header
         margin-bottom: 2rem
-
+        
         h2
             font-size: 2rem
             color: $text-primary
-            margin: 0
+            margin: 0 0 1rem
+
+        .filters
+            display: flex
+            gap: 1.5rem
+            padding: 1rem
+            background: white
+            border-radius: 8px
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05)
+
+            .filter-group
+                display: flex
+                flex-direction: column
+                gap: 0.5rem
+
+                label
+                    font-size: 0.9rem
+                    color: $text-secondary
+                    font-weight: 500
+
+                select
+                    padding: 0.5rem
+                    border: 1px solid $border-color
+                    border-radius: 4px
+                    background: white
+                    min-width: 150px
+                    cursor: pointer
+
+                    &:focus
+                        outline: none
+                        border-color: $primary-color
+
+                    option
+                        padding: 0.5rem
 
     &__list
         display: grid
@@ -148,3 +181,12 @@
                 
                 button
                     width: 100% 
+
+        &__header
+            .filters
+                flex-direction: column
+                gap: 1rem
+
+                .filter-group
+                    select
+                        width: 100% 

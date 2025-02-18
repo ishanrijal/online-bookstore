@@ -3,12 +3,15 @@ from .models import Review, Wishlist
 
 class ReviewSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.username', read_only=True)
+    user_profile_picture = serializers.ImageField(source='user.profile_picture', read_only=True)
+    user_role = serializers.CharField(source='user.role', read_only=True)
     book_title = serializers.CharField(source='book.title', read_only=True)
+    book_cover = serializers.ImageField(source='book.cover_image', read_only=True)
 
     class Meta:
         model = Review
         fields = '__all__'
-        read_only_fields = ['user']
+        read_only_fields = ['user', 'user_name', 'user_profile_picture', 'user_role']
 
     def validate(self, attrs):
         if attrs['rating'] < 1 or attrs['rating'] > 5:
