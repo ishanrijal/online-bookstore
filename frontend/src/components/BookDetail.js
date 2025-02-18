@@ -4,6 +4,7 @@ import axios from '../utils/axios';
 import Header from './Header';
 import Footer from './Footer';
 import '../sass/components/_bookDetail.sass';
+import ReviewList from './reviews/ReviewList';
 
 const BookDetail = () => {
     const { id } = useParams();
@@ -224,6 +225,10 @@ const BookDetail = () => {
                             </div>
                         ))}
                     </div>
+                </div>
+
+                <div className="book-detail__reviews">
+                    <ReviewList bookId={id} />
                 </div>
             </main>
             <Footer />

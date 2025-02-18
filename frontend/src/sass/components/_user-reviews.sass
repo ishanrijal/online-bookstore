@@ -1,0 +1,150 @@
+@use '../utils/variables' as *
+@use '../utils/mixins' as *
+
+.user-reviews
+    padding: 2rem
+    max-width: 1200px
+    margin: 0 auto
+
+    &__header
+        margin-bottom: 2rem
+
+        h2
+            font-size: 2rem
+            color: $text-primary
+            margin: 0
+
+    &__list
+        display: grid
+        gap: 1.5rem
+
+    .review-card
+        background: white
+        padding: 1.5rem
+        border-radius: 8px
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1)
+
+        .review-book-info
+            display: flex
+            gap: 1.5rem
+            margin-bottom: 1rem
+
+            .book-cover
+                width: 100px
+                height: 150px
+                object-fit: cover
+                border-radius: 4px
+
+            .book-details
+                display: flex
+                flex-direction: column
+                gap: 0.5rem
+
+                h3
+                    margin: 0
+                    color: $text-primary
+                    font-size: 1.2rem
+
+                .review-date
+                    color: $text-muted
+                    font-size: 0.9rem
+
+        .review-comment
+            color: $text-secondary
+            line-height: 1.5
+            margin: 1rem 0
+
+        .edit-form
+            margin: 1rem 0
+
+            .edit-textarea
+                width: 100%
+                padding: 0.75rem
+                border: 1px solid $border-color
+                border-radius: 4px
+                resize: vertical
+                min-height: 100px
+                margin-bottom: 1rem
+
+                &:focus
+                    outline: none
+                    border-color: $primary-color
+
+            .edit-actions
+                display: flex
+                gap: 1rem
+                justify-content: flex-end
+
+        .review-actions
+            display: flex
+            gap: 1rem
+            justify-content: flex-end
+            margin-top: 1rem
+
+            button
+                padding: 0.5rem 1rem
+                border: none
+                border-radius: 4px
+                cursor: pointer
+                transition: all 0.3s
+
+            .edit-btn
+                background: $primary-color
+                color: white
+
+                &:hover
+                    background: darken($primary-color, 10%)
+
+            .delete-btn
+                background: $error-color
+                color: white
+
+                &:hover
+                    background: darken($error-color, 10%)
+
+            .update-btn
+                background: $primary-color
+                color: white
+
+                &:hover
+                    background: darken($primary-color, 10%)
+
+            .cancel-btn
+                background: $bg-light
+                border: 1px solid $border-color
+                color: $text-secondary
+
+                &:hover
+                    background: darken($bg-light, 5%)
+
+    .no-reviews
+        text-align: center
+        padding: 3rem
+        background: white
+        border-radius: 8px
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1)
+
+        p
+            color: $text-muted
+            font-size: 1.1rem
+            margin: 0
+
+@media (max-width: 768px)
+    .user-reviews
+        padding: 1rem
+
+        .review-card
+            .review-book-info
+                flex-direction: column
+                align-items: center
+                text-align: center
+
+                .book-cover
+                    width: 120px
+                    height: 180px
+
+            .review-actions, .edit-actions
+                flex-direction: column
+                
+                button
+                    width: 100% 

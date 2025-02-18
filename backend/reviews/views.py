@@ -25,6 +25,21 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    @action(detail=True, methods=['patch'])
+    def update_review(self, request, pk=None):
+        review = self.get_object()
+        if review.user != request.user:
+            return Response(
+                {"error": "You can only edit your own reviews"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        serializer = self.get_serializer(review, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=False, methods=['get'])
     def book_reviews(self, request):
         book_id = request.query_params.get('book_id')
