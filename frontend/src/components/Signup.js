@@ -135,16 +135,9 @@ const Signup = () => {
                 details: null
             });
             
-            localStorage.setItem('user', JSON.stringify(response.data));
-            
+            // User can now log in immediately
             setTimeout(() => {
-                switch(formData.role) {
-                    case 'Admin':
-                        navigate('/admin');
-                        break;
-                    default:
-                        navigate('/dashboard');
-                }
+                navigate('/login');
             }, 1500);
         }
     } catch (error) {

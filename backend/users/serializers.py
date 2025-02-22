@@ -15,20 +15,28 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'password', 'role', 'first_name', 
-                 'last_name', 'phone', 'address', 'profile_picture', 
-                 'is_email_verified', 'created_at', 'updated_at')
-        read_only_fields = ('is_email_verified', 'created_at', 'updated_at')
+                 'last_name', 'phone', 'address', 'profile_picture', 'is_email_verified')
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'is_email_verified': {'read_only': True}
+        }
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            role=validated_data.get('role', 'Reader'),
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            phone=validated_data.get('phone', ''),
+            address=validated_data.get('address', ''),
+            profile_picture=validated_data.get('profile_picture', None),
+            is_email_verified=True
+        )
         return user
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):

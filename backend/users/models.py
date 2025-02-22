@@ -3,17 +3,19 @@ from django.db import models
 import uuid
 
 class User(AbstractUser):
-    ROLE_CHOICES = (
-        ('ADMIN', 'Admin'),
-        ('READER', 'Reader'),
-    )
+    ROLE_CHOICES = [
+        ('Admin', 'Admin'),
+        ('Publisher', 'Publisher'),
+        ('Author', 'Author'),
+        ('Reader', 'Reader'),
+    ]
 
     email = models.EmailField(unique=True)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='READER')
-    phone = models.CharField(max_length=15, blank=True)
-    address = models.TextField(blank=True)
-    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
-    is_email_verified = models.BooleanField(default=False)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='Reader')
+    phone = models.CharField(max_length=15, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    is_email_verified = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
     email_verification_token = models.UUIDField(default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
