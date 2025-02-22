@@ -54,8 +54,18 @@ function ManageBooks() {
                             <td>${book.price}</td>
                             <td>{book.stock}</td>
                             <td className="actions">
-                                <Link to={`/admin/manage-books/edit/${book.id}`} className="btn btn-sm btn-warning me-2">Edit</Link>
-                                <button onClick={() => handleDelete(book.id)} className="btn btn-sm btn-danger">Delete</button>
+                                <Link 
+                                    to={`/admin/manage-books/edit/${book.id}`} 
+                                    className="btn btn-sm btn-warning me-2"
+                                >
+                                    Edit
+                                </Link>
+                                <button 
+                                    onClick={() => handleDelete(book.id)} 
+                                    className="btn btn-sm btn-danger"
+                                >
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                     ))}

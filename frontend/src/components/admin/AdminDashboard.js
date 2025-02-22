@@ -10,6 +10,7 @@ import ManageUsers from './ManageUsers';
 import ManagePayments from './ManagePayments';
 import ManageReviews from './ManageReviews';
 import AddBook from './books/AddBook';
+import EditBook from './books/EditBook';
 import './admin.css';
 
 const AdminDashboard = () => {
@@ -23,6 +24,7 @@ const AdminDashboard = () => {
                         <Route index element={<AdminOverview />} />
                         <Route path="manage-books/*" element={<ManageBooks />} />
                         <Route path="manage-books/new" element={<AddBook />} />
+                        <Route path="manage-books/edit/:id" element={<EditBook />} />
                         <Route path="manage-orders" element={<ManageOrders />} />
                         <Route path="manage-users" element={<ManageUsers />} />
                         <Route path="manage-payments" element={<ManagePayments />} />
