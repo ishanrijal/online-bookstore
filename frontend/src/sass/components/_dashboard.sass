@@ -1,12 +1,222 @@
+@use '../utils/variables' as *
+@use '../utils/mixins' as *
+
 .dashboard
-    display: flex
-    min-height: 100vh
-    background: #f8f9fa
+    display: grid
+    grid-template-columns: 250px 1fr
+    gap: 2rem
+    padding: 2rem
+    min-height: calc(100vh - 200px)
+    background: $bg-light
 
     &__content
-        flex: 1
+        background: white
         padding: 2rem
-        overflow-y: auto
+        border-radius: $border-radius-lg
+        box-shadow: $box-shadow-sm
+
+.dashboard-overview
+    h2
+        font-size: 1.8rem
+        color: $text-primary
+        margin-bottom: 2rem
+
+    .stats-grid
+        display: grid
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))
+        gap: 1.5rem
+        margin-bottom: 3rem
+
+    .stat-card
+        background: white
+        padding: 1.5rem
+        border-radius: $border-radius-md
+        box-shadow: $box-shadow-sm
+        display: flex
+        align-items: center
+        gap: 1rem
+        transition: transform 0.3s ease
+
+        &:hover
+            transform: translateY(-5px)
+
+        .stat-icon
+            width: 50px
+            height: 50px
+            background: rgba($primary-color, 0.1)
+            border-radius: 50%
+            display: flex
+            align-items: center
+            justify-content: center
+            color: $primary-color
+            font-size: 1.5rem
+
+        .stat-details
+            h3
+                font-size: 1rem
+                color: $text-secondary
+                margin-bottom: 0.5rem
+
+            p
+                font-size: 1.5rem
+                font-weight: 600
+                color: $text-primary
+
+    .recent-orders
+        &__header
+            display: flex
+            justify-content: space-between
+            align-items: center
+            margin-bottom: 1.5rem
+
+            .view-all
+                color: $primary-color
+                text-decoration: none
+                font-weight: 500
+                
+                &:hover
+                    text-decoration: underline
+
+        .no-orders
+            text-align: center
+            padding: 2rem
+            background: $bg-light
+            border-radius: $border-radius-md
+            color: $text-secondary
+
+        .actions
+            display: flex
+            gap: 1rem
+            align-items: center
+
+            .cancel-btn
+                background: none
+                border: none
+                color: $danger-color
+                cursor: pointer
+                display: flex
+                align-items: center
+                gap: 0.5rem
+                padding: 0.25rem 0.5rem
+                font-size: 0.9rem
+                border-radius: $border-radius-sm
+                transition: all 0.3s ease
+
+                &:hover
+                    background: rgba($danger-color, 0.1)
+                    transform: translateY(-1px)
+
+                &:active
+                    transform: translateY(0)
+
+.orders-table
+    background: white
+    border-radius: $border-radius-md
+    overflow: hidden
+    box-shadow: $box-shadow-sm
+    margin-top: 1rem
+
+    table
+        width: 100%
+        border-collapse: collapse
+
+        th, td
+            padding: 1rem
+            text-align: left
+            border-bottom: 1px solid $border-color
+
+            &:last-child
+                text-align: right
+
+        th
+            font-weight: 500
+            color: $text-secondary
+            background: $bg-light
+            font-size: 0.9rem
+            text-transform: uppercase
+            letter-spacing: 0.5px
+
+        td
+            color: $text-primary
+            font-size: 0.95rem
+
+            a
+                color: $primary-color
+                text-decoration: none
+                font-weight: 500
+
+                &:hover
+                    text-decoration: underline
+
+            .status
+                display: inline-block
+                padding: 0.35rem 0.75rem
+                border-radius: 999px
+                font-size: 0.85rem
+                font-weight: 500
+                text-transform: capitalize
+
+                &.status--pending
+                    background: rgba($warning-color, 0.1)
+                    color: $warning-color
+
+                &.status--delivered
+                    background: rgba($success-color, 0.1)
+                    color: $success-color
+
+                &.status--cancelled
+                    background: rgba($danger-color, 0.1)
+                    color: $danger-color
+
+                &.status--processing
+                    background: rgba($info-color, 0.1)
+                    color: $info-color
+
+            &.amount
+                font-weight: 500
+                color: $text-primary
+
+                .currency
+                    color: $text-secondary
+                    margin-right: 0.25rem
+
+        tr
+            &:last-child
+                td
+                    border-bottom: none
+
+            &:hover
+                background: rgba($primary-color, 0.02)
+
+@media (max-width: $breakpoint-sm)
+    .orders-table
+        table
+            th, td
+                padding: 0.75rem
+                font-size: 0.85rem
+
+            th
+                &:nth-child(2)  // Hide Date column on mobile
+                    display: none
+                
+            td
+                &:nth-child(2)  // Hide Date column on mobile
+                    display: none
+
+@media (max-width: $breakpoint-md)
+    .dashboard
+        grid-template-columns: 1fr
+        padding: 1rem
+
+        &__content
+            padding: 1rem
+
+    .stats-grid
+        grid-template-columns: repeat(2, 1fr)
+
+@media (max-width: $breakpoint-sm)
+    .stats-grid
+        grid-template-columns: 1fr
 
 .dashboard-sidebar
     width: 280px
@@ -76,6 +286,7 @@
                     text-decoration: none
                     border-radius: 8px
                     transition: all 0.3s ease
+                    gap: 1rem
 
                     i
                         margin-right: 1rem

@@ -13,6 +13,7 @@ import Checkout from '../components/Checkout';
 import PaymentSuccess from '../components/PaymentSuccess';
 import PaymentFailure from '../components/PaymentFailure';
 import BookDetail from '../components/BookDetail';
+import Cart from '../components/Cart';
 
 const AppRoutes = () => {
     return (

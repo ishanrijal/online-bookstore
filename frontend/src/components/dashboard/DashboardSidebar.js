@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { FaHome, FaUser, FaShoppingBag, FaHeart, FaStar, FaCog } from 'react-icons/fa';
 import '../../sass/components/_dashboard.sass';
 
 const DashboardSidebar = () => {
@@ -8,7 +9,12 @@ const DashboardSidebar = () => {
     const { user } = useAuth();
 
     const isActive = (path) => {
-        return location.pathname.includes(path) ? 'active' : '';
+        // For dashboard overview (root dashboard path)
+        if (path === '') {
+            return location.pathname === '/dashboard' ? 'active' : '';
+        }
+        // For other routes
+        return location.pathname.includes(`/dashboard/${path}`) ? 'active' : '';
     };
 
     return (
@@ -30,32 +36,38 @@ const DashboardSidebar = () => {
             <nav className="dashboard-sidebar__nav">
                 <ul>
                     <li>
+                        <Link to="/dashboard" className={isActive('')}>
+                            <FaHome className="icon" />
+                            Dashboard
+                        </Link>
+                    </li>
+                    <li>
                         <Link to="/dashboard/profile" className={isActive('profile')}>
-                            <i className="fas fa-user"></i>
+                            <FaUser className="icon" />
                             Profile
                         </Link>
                     </li>
                     <li>
                         <Link to="/dashboard/orders" className={isActive('orders')}>
-                            <i className="fas fa-shopping-bag"></i>
+                            <FaShoppingBag className="icon" />
                             My Orders
                         </Link>
                     </li>
                     <li>
                         <Link to="/dashboard/wishlist" className={isActive('wishlist')}>
-                            <i className="fas fa-heart"></i>
+                            <FaHeart className="icon" />
                             Wishlist
                         </Link>
                     </li>
                     <li>
                         <Link to="/dashboard/reviews" className={isActive('reviews')}>
-                            <i className="fas fa-star"></i>
+                            <FaStar className="icon" />
                             My Reviews
                         </Link>
                     </li>
                     <li>
                         <Link to="/dashboard/settings" className={isActive('settings')}>
-                            <i className="fas fa-cog"></i>
+                            <FaCog className="icon" />
                             Settings
                         </Link>
                     </li>

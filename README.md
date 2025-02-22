@@ -222,3 +222,53 @@ python manage.py migrate
 
 
     https://www.figma.com/proto/enG2TiSd7m5pALWWfI43wm/Project-Wireframes?node-id=0-1&t=GeVJsEHcccffXUBj-1
+
+
+
+    admin/
+api/users/
+api/ ^books/$ [name='book-list']
+api/ ^books\.(?P<format>[a-z0-9]+)/?$ [name='book-list']
+api/ ^books/by_category/$ [name='book-by-category']
+api/ ^books/by_category\.(?P<format>[a-z0-9]+)/?$ [name='book-by-category']
+api/ ^books/recommendations/$ [name='book-recommendations']
+api/ ^books/recommendations\.(?P<format>[a-z0-9]+)/?$ [name='book-recommendations']
+api/ ^books/(?P<pk>[^/.]+)/$ [name='book-detail']
+api/ ^books/(?P<pk>[^/.]+)\.(?P<format>[a-z0-9]+)/?$ [name='book-detail']
+api/ ^books/(?P<pk>[^/.]+)/add_to_wishlist/$ [name='book-add-to-wishlist']
+api/ ^books/(?P<pk>[^/.]+)/add_to_wishlist\.(?P<format>[a-z0-9]+)/?$ [name='book-add-to-wishlist']
+api/ ^books/(?P<pk>[^/.]+)/remove_from_wishlist/$ [name='book-remove-from-wishlist']
+api/ ^books/(?P<pk>[^/.]+)/remove_from_wishlist\.(?P<format>[a-z0-9]+)/?$ [name='book-remove-from-wishlist']
+api/ ^categories/$ [name='category-list']
+api/ ^categories\.(?P<format>[a-z0-9]+)/?$ [name='category-list']
+api/ ^categories/(?P<slug>[^/.]+)/$ [name='category-detail']
+api/ ^categories/(?P<slug>[^/.]+)\.(?P<format>[a-z0-9]+)/?$ [name='category-detail']
+api/ ^publishers/$ [name='publisher-list']
+api/ ^publishers\.(?P<format>[a-z0-9]+)/?$ [name='publisher-list']
+api/ ^publishers/(?P<pk>[^/.]+)/$ [name='publisher-detail']
+api/ ^publishers/(?P<pk>[^/.]+)\.(?P<format>[a-z0-9]+)/?$ [name='publisher-detail']
+api/ ^authors/$ [name='author-list']
+api/ ^authors\.(?P<format>[a-z0-9]+)/?$ [name='author-list']
+api/ ^authors/(?P<pk>[^/.]+)/$ [name='author-detail']
+api/ ^authors/(?P<pk>[^/.]+)\.(?P<format>[a-z0-9]+)/?$ [name='author-detail']
+api/ [name='api-root']
+api/ <drf_format_suffix:format> [name='api-root']
+api/orders/ ^carts/$ [name='cart-list']
+api/orders/ ^carts\.(?P<format>[a-z0-9]+)/?$ [name='cart-list']
+api/orders/ ^carts/add_item/$ [name='cart-add-item']
+api/orders/ ^carts/add_item\.(?P<format>[a-z0-9]+)/?$ [name='cart-add-item']
+api/orders/ ^carts/current/$ [name='cart-current']
+api/orders/ ^carts/current\.(?P<format>[a-z0-9]+)/?$ [name='cart-current']
+api/orders/ ^carts/remove_item/$ [name='cart-remove-item']
+api/orders/ ^carts/remove_item\.(?P<format>[a-z0-9]+)/?$ [name='cart-remove-item']
+api/orders/ ^carts/update_quantity/$ [name='cart-update-quantity']
+api/orders/ ^carts/update_quantity\.(?P<format>[a-z0-9]+)/?$ [name='cart-update-quantity']
+api/orders/ ^carts/(?P<pk>[^/.]+)/$ [name='cart-detail']
+api/orders/ ^carts/(?P<pk>[^/.]+)\.(?P<format>[a-z0-9]+)/?$ [name='cart-detail']
+api/orders/ [name='api-root']
+api/orders/ <drf_format_suffix:format> [name='api-root']
+api/payments/
+api/reviews/
+api/token/ [name='token_obtain_pair']
+api/token/refresh/ [name='token_refresh']
+^media/(?P<path>.*)$

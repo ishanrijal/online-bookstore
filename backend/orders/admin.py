@@ -26,7 +26,8 @@ class CartAdmin(admin.ModelAdmin):
 @admin.register(CartItem)
 class CartItemAdmin(admin.ModelAdmin):
     list_display = ('cart', 'book', 'quantity', 'added_at')
-    search_fields = ('cart__user__username', 'book__title')
+    list_filter = ('added_at',)
+    search_fields = ('book__title',)
 
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):

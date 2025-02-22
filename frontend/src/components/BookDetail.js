@@ -5,6 +5,7 @@ import Header from './Header';
 import Footer from './Footer';
 import '../sass/components/_bookDetail.sass';
 import ReviewList from './reviews/ReviewList';
+import { cartAPI } from '../utils/axios';
 
 const BookDetail = () => {
     const { id } = useParams();
@@ -45,11 +46,7 @@ const BookDetail = () => {
 
     const handleAddToCart = async () => {
         try {
-            await axios.post('/orders/carts/add_item/', {
-                book_id: id,
-                quantity: 1
-            });
-
+            await cartAPI.addToCart(id, 1);
             setIsInCart(true);
             setNotification({
                 type: 'success',
@@ -74,22 +71,12 @@ const BookDetail = () => {
 
     const handleRemoveFromCart = async () => {
         try {
-            // First get the user's cart
-            const cartRes = await axios.get('/orders/carts/current/');
-            const cart = cartRes.data;
-            const cartItem = cart.items.find(item => item.book === parseInt(id));
-            
-            if (cartItem) {
-                // Use the correct endpoint with cart ID
-                await axios.post(`/orders/carts/${cart.id}/remove_item/`, {
-                    item_id: cartItem.id
-                });
-                setIsInCart(false);
-                setNotification({
-                    type: 'success',
-                    message: 'Book removed from cart successfully!'
-                });
-            }
+            await cartAPI.removeCartItem(id);
+            setIsInCart(false);
+            setNotification({
+                type: 'success',
+                message: 'Book removed from cart successfully!'
+            });
         } catch (error) {
             setNotification({
                 type: 'error',

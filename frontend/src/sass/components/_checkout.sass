@@ -1,94 +1,117 @@
+@use '../utils/variables' as *
+@use '../utils/mixins' as *
+
 .checkout
-    padding: 2rem 0
+    padding: 3rem 0
     min-height: calc(100vh - 200px)
+    background: $bg-light
+    position: relative
 
     &__container
-        max-width: 1200px
+        max-width: $container-max-width
         margin: 0 auto
-        padding: 0 1rem
+        padding: 2rem
+        background: white
+        border-radius: $border-radius-lg
+        box-shadow: $box-shadow-sm
 
         h1
             font-size: 2rem
-            color: #333
+            color: $text-primary
             margin-bottom: 2rem
+            padding-bottom: 1rem
+            border-bottom: 1px solid $border-color
 
     &__content
         display: grid
-        grid-template-columns: repeat(2, 1fr)
+        grid-template-columns: 2fr 1fr
         gap: 2rem
 
-        @media (max-width: 768px)
+        @media (max-width: $breakpoint-md)
             grid-template-columns: 1fr
 
-    &__shipping, &__payment
-        background: #fff
-        padding: 2rem
-        border-radius: 8px
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1)
+    &__shipping
+        padding: 1.5rem
+        background: $bg-light
+        border-radius: $border-radius-md
 
         h2
-            font-size: 1.5rem
-            color: #333
+            font-size: 1.4rem
+            color: $text-primary
             margin-bottom: 1.5rem
 
-    .form-group
-        margin-bottom: 1.5rem
-
-        label
-            display: block
-            margin-bottom: 0.5rem
-            color: #555
-
-        input, textarea
-            width: 100%
-            padding: 0.8rem
-            border: 1px solid #ddd
-            border-radius: 4px
-            font-size: 1rem
-
-            &:focus
-                outline: none
-                border-color: #2c5282
-
-        textarea
-            min-height: 100px
-            resize: vertical
-
-    .payment-methods
-        display: flex
-        flex-direction: column
-        gap: 1rem
-
-        .payment-method
-            display: flex
-            align-items: center
-            gap: 0.5rem
-            padding: 1rem
-            border: 1px solid #ddd
-            border-radius: 4px
-            cursor: pointer
-            transition: all 0.3s ease
-
-            &:hover
-                background: #f7fafc
-
-            input
-                margin: 0
+        .form-group
+            margin-bottom: 1.5rem
 
             label
-                margin: 0
-                cursor: pointer
+                display: block
+                margin-bottom: 0.5rem
+                color: $text-secondary
+                font-size: 0.9rem
 
-    &__summary
-        background: #fff
-        padding: 2rem
-        border-radius: 8px
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1)
-        grid-column: 1 / -1
+            input, textarea
+                width: 100%
+                padding: 0.75rem
+                border: 1px solid $border-color
+                border-radius: $border-radius-sm
+                font-size: 1rem
+                transition: all 0.3s ease
+
+                &:focus
+                    outline: none
+                    border-color: $primary-color
+                    box-shadow: 0 0 0 2px rgba($primary-color, 0.1)
+
+            textarea
+                min-height: 100px
+                resize: vertical
+
+    &__payment
+        padding: 1.5rem
+        background: $bg-light
+        border-radius: $border-radius-md
 
         h2
-            font-size: 1.5rem
-            color: #333
+            font-size: 1.4rem
+            color: $text-primary
+            margin-bottom: 1.5rem
+
+        .payment-methods
+            display: flex
+            flex-direction: column
+            gap: 1rem
+
+            .payment-method
+                display: flex
+                align-items: center
+                gap: 0.75rem
+                padding: 1rem
+                background: white
+                border: 1px solid $border-color
+                border-radius: $border-radius-sm
+                cursor: pointer
+                transition: all 0.3s ease
+
+                &:hover
+                    border-color: $primary-color
+                    background: rgba($primary-color, 0.02)
+
+                input[type="radio"]
+                    accent-color: $primary-color
+
+                label
+                    font-size: 1rem
+                    color: $text-primary
+                    cursor: pointer
+
+    &__summary
+        padding: 1.5rem
+        background: $bg-light
+        border-radius: $border-radius-md
+
+        h2
+            font-size: 1.4rem
+            color: $text-primary
             margin-bottom: 1.5rem
 
         .summary-items
@@ -97,61 +120,85 @@
             .summary-item
                 display: flex
                 justify-content: space-between
-                padding: 0.5rem 0
-                border-bottom: 1px solid #eee
+                padding: 0.75rem 0
+                border-bottom: 1px solid $border-color
 
                 &:last-child
                     border-bottom: none
+
+                span
+                    &:first-child
+                        color: $text-secondary
+                    &:last-child
+                        font-weight: 500
+                        color: $text-primary
 
         .summary-total
             display: flex
             justify-content: space-between
             padding: 1rem 0
-            border-top: 2px solid #eee
-            font-weight: bold
+            border-top: 2px solid $border-color
+            margin-top: 1rem
             font-size: 1.2rem
+            font-weight: 600
+            color: $primary-color
 
-    .place-order-btn
-        width: 100%
-        margin-top: 1.5rem
-        padding: 1rem
-        font-size: 1.1rem
-
-    &__success
-        display: flex
-        justify-content: center
-        align-items: center
-        min-height: calc(100vh - 200px)
-        padding: 2rem
-
-        .success-content
-            text-align: center
-            background: white
-            padding: 3rem
-            border-radius: 8px
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1)
-
-            .success-icon
-                font-size: 4rem
-                color: #28a745
-                margin-bottom: 1rem
-
-            h2
-                color: #333
-                margin-bottom: 1rem
-
-            p
-                color: #666
-                margin-bottom: 2rem
-
-        .continue-shopping-btn
-            display: inline-block
-            padding: 1rem 2rem
-            background: #007bff
+        .place-order-btn
+            width: 100%
+            padding: 1rem
+            margin-top: 1.5rem
+            background: $primary-color
             color: white
-            text-decoration: none
-            border-radius: 4px
-            transition: background-color 0.3s
+            border: none
+            border-radius: $border-radius-md
+            font-size: 1.1rem
+            font-weight: 500
+            cursor: pointer
+            transition: all 0.3s ease
+            display: flex
+            align-items: center
+            justify-content: center
+            gap: 0.75rem
 
             &:hover
-                background: #0056b3 
+                background: darken($primary-color, 10%)
+                transform: translateY(-2px)
+                box-shadow: $box-shadow-md
+
+            &:active
+                transform: translateY(0)
+
+    &__success
+        text-align: center
+        padding: 4rem 2rem
+
+        .success-icon
+            font-size: 4rem
+            color: $success-color
+            margin-bottom: 1.5rem
+
+        h2
+            font-size: 2rem
+            color: $text-primary
+            margin-bottom: 1rem
+
+        p
+            color: $text-secondary
+            margin-bottom: 2rem
+
+        .continue-shopping-btn
+            display: inline-flex
+            align-items: center
+            gap: 0.75rem
+            padding: 1rem 2rem
+            background: $primary-color
+            color: white
+            border-radius: $border-radius-md
+            text-decoration: none
+            font-weight: 500
+            transition: all 0.3s ease
+
+            &:hover
+                background: darken($primary-color, 10%)
+                transform: translateY(-2px)
+                box-shadow: $box-shadow-md 

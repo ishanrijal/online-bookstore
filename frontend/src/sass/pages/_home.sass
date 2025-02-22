@@ -1,0 +1,53 @@
+@use '../utils/variables' as *
+@use '../utils/mixins' as *
+
+.home
+    .main-content
+        padding: 2rem 0
+        background: $bg-light
+
+    .section
+        margin-bottom: 4rem
+
+        &:last-child
+            margin-bottom: 0
+
+    .section-title
+        font-size: 2rem
+        color: $text-primary
+        margin-bottom: 2rem
+        text-align: center
+        position: relative
+        
+        &::after
+            content: ''
+            display: block
+            width: 60px
+            height: 3px
+            background: $primary-color
+            margin: 1rem auto 0
+
+    .category-grid
+        display: grid
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))
+        gap: 1.5rem
+        
+        .category-card
+            background: white
+            padding: 2rem
+            border-radius: 8px
+            text-align: center
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1)
+            transition: all 0.3s ease
+            
+            &:hover
+                transform: translateY(-5px)
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15)
+            
+            h3
+                color: $text-primary
+                margin-bottom: 0.5rem
+            
+            .book-count
+                color: $text-muted
+                font-size: 0.9rem

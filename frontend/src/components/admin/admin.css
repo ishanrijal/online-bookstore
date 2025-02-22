@@ -190,4 +190,115 @@
     flex: 1;
     padding: 2rem;
     overflow-y: auto;
+}
+
+.dashboard {
+    display: flex;
+    min-height: calc(100vh - 140px); /* Adjust based on header and footer height */
+    background-color: #f8f9fa;
+}
+
+.dashboard__content {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #f0f4ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4070f4;
+}
+
+.stat-details h3 {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+}
+
+.stat-details p {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+/* Recent Orders */
+.recent-orders {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+}
+
+.recent-orders__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.view-all {
+    color: #4070f4;
+    text-decoration: none;
+    font-size: 0.875rem;
+}
+
+.orders-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.orders-table th,
+.orders-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.orders-table th {
+    font-weight: 600;
+    color: #64748b;
+}
+
+.status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.status--pending { background: #fff7ed; color: #c2410c; }
+.status--delivered { background: #f0fdf4; color: #15803d; }
+.status--cancelled { background: #fef2f2; color: #b91c1c; }
+
+.amount {
+    font-weight: 600;
+}
+
+.currency {
+    color: #64748b;
+    margin-right: 0.25rem;
 } 

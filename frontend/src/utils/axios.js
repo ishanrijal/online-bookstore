@@ -1,7 +1,10 @@
 import axios from 'axios';
 
 const instance = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000/api',
+    baseURL: 'http://127.0.0.1:8000/api',
+    headers: {
+        'Content-Type': 'application/json',
+    }
 });
 
 // Add request interceptor to add auth token
@@ -55,4 +58,31 @@ instance.interceptors.response.use(
     }
 );
 
+// Cart related API calls
+const cartAPI = {
+    // Get current cart
+    getCurrentCart: () => instance.get('/orders/carts/current/'),
+    
+    // Update quantity
+    updateQuantity: (bookId, quantity) => 
+        instance.patch('/orders/carts/update_quantity/', {
+            book_id: bookId,
+            quantity: quantity
+        }),
+    
+    // Remove item
+    removeCartItem: (bookId) => 
+        instance.post('/orders/carts/remove_item/', {
+            book_id: bookId
+        }),
+    
+    // Add to cart
+    addToCart: (bookId, quantity = 1) => 
+        instance.post('/orders/carts/add_item/', {
+            book_id: bookId,
+            quantity: quantity
+        })
+};
+
+export { cartAPI };
 export default instance; 

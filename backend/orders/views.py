@@ -74,75 +74,113 @@ class CartViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def add_item(self, request):
-        """Add item to current user's cart"""
-        cart, created = Cart.objects.get_or_create(user=request.user)
-        book_id = request.data.get('book_id')
-        quantity = int(request.data.get('quantity', 1))
-
+        """Add or update item in cart"""
         try:
-            book = Book.objects.get(id=book_id)
-            if book.stock < quantity:
+            cart = Cart.objects.get(user=request.user)
+            book_id = request.data.get('book_id')
+            quantity = int(request.data.get('quantity', 1))
+            update_type = request.data.get('update_type', 'set')  # 'set', 'increment', or 'decrement'
+
+            try:
+                book = Book.objects.get(id=book_id)
+                cart_item = CartItem.objects.filter(cart=cart, book=book).first()
+
+                if cart_item:
+                    if update_type == 'increment':
+                        new_quantity = cart_item.quantity + quantity
+                    elif update_type == 'decrement':
+                        new_quantity = max(1, cart_item.quantity - quantity)
+                    else:
+                        new_quantity = quantity
+
+                    if new_quantity <= 0:
+                        cart_item.delete()
+                    else:
+                        if book.stock < new_quantity:
+                            return Response(
+                                {'error': f'Only {book.stock} copies available'},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                        cart_item.quantity = new_quantity
+                        cart_item.save()
+                else:
+                    if quantity > 0:
+                        if book.stock < quantity:
+                            return Response(
+                                {'error': f'Only {book.stock} copies available'},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                        CartItem.objects.create(cart=cart, book=book, quantity=quantity)
+
+                serializer = self.get_serializer(cart)
+                return Response(serializer.data)
+
+            except Book.DoesNotExist:
                 return Response(
-                    {'error': f'Only {book.stock} copies available'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {'error': 'Book not found'},
+                    status=status.HTTP_404_NOT_FOUND
                 )
 
-            cart_item, created = CartItem.objects.get_or_create(
-                cart=cart,
-                book=book,
-                defaults={'quantity': quantity}
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
             )
-            if not created:
-                cart_item.quantity += quantity
-                cart_item.save()
 
+    @action(detail=False, methods=['post'])
+    def remove_item(self, request):
+        """Remove item from cart"""
+        try:
+            cart = Cart.objects.get(user=request.user)
+            book_id = request.data.get('book_id')
+            
+            cart_item = CartItem.objects.filter(cart=cart, book_id=book_id).first()
+            if cart_item:
+                cart_item.delete()
+            
             serializer = self.get_serializer(cart)
             return Response(serializer.data)
-
-        except Book.DoesNotExist:
+        except Exception as e:
             return Response(
-                {'error': 'Book not found'},
-                status=status.HTTP_404_NOT_FOUND
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
-    @action(detail=True, methods=['post'])
-    def update_quantity(self, request, pk=None):
-        cart = self.get_object()
-        item_id = request.data.get('item_id')
-        quantity = int(request.data.get('quantity', 1))
-
+    @action(detail=False, methods=['patch'])
+    def update_quantity(self, request):
+        """Update cart item quantity"""
         try:
-            cart_item = cart.items.get(id=item_id)
-            if quantity <= 0:
-                cart_item.delete()
-                return Response({'status': 'Item removed from cart'})
-            
-            if cart_item.book.stock < quantity:
+            cart = Cart.objects.get(user=request.user)
+            book_id = request.data.get('book_id')
+            quantity = int(request.data.get('quantity', 1))
+
+            try:
+                cart_item = CartItem.objects.get(cart=cart, book_id=book_id)
+                
+                if quantity <= 0:
+                    cart_item.delete()
+                else:
+                    if cart_item.book.stock < quantity:
+                        return Response(
+                            {'error': f'Only {cart_item.book.stock} copies available'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    cart_item.quantity = quantity
+                    cart_item.save()
+
+                serializer = self.get_serializer(cart)
+                return Response(serializer.data)
+
+            except CartItem.DoesNotExist:
                 return Response(
-                    {'error': f'Only {cart_item.book.stock} copies available'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {'error': 'Cart item not found'},
+                    status=status.HTTP_404_NOT_FOUND
                 )
 
-            cart_item.quantity = quantity
-            cart_item.save()
-            return Response(CartItemSerializer(cart_item).data)
-        except CartItem.DoesNotExist:
+        except Exception as e:
             return Response(
-                {'error': 'Cart item not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-    @action(detail=True, methods=['post'])
-    def remove_item(self, request, pk=None):
-        cart = self.get_object()
-        item_id = request.data.get('item_id')
-        try:
-            cart.items.get(id=item_id).delete()
-            return Response({'status': 'Item removed from cart'})
-        except CartItem.DoesNotExist:
-            return Response(
-                {'error': 'Cart item not found'},
-                status=status.HTTP_404_NOT_FOUND
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -188,6 +226,50 @@ class OrderViewSet(viewsets.ModelViewSet):
             {'error': 'Order cannot be cancelled'},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+    @action(detail=False, methods=['post'])
+    def checkout(self, request):
+        """Process checkout and create order"""
+        try:
+            cart = Cart.objects.get(user=request.user)
+            if not cart.items.exists():
+                return Response(
+                    {'error': 'Cart is empty'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Create order
+            order = Order.objects.create(
+                user=request.user,
+                shipping_address=request.data.get('shipping_address'),
+                contact_number=request.data.get('contact_number'),
+                status='Pending',
+                total_price=cart.total_price
+            )
+
+            # Create order details from cart items
+            for cart_item in cart.items.all():
+                OrderDetail.objects.create(
+                    order=order,
+                    book=cart_item.book,
+                    quantity=cart_item.quantity,
+                    price=cart_item.book.price
+                )
+
+            # Clear cart after order creation
+            cart.items.all().delete()
+
+            return Response({
+                'status': 'success',
+                'order_id': order.id,
+                'total_amount': float(order.total_price)
+            })
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]

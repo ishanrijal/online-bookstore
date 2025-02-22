@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import axios from '../utils/axios';
+import { Link, useNavigate } from 'react-router-dom';
+import axios, { cartAPI } from '../utils/axios';
 import '../assets/css/style.css';
 import Header from './Header';
 import Banner from './Banner';
 import Footer from './Footer';
+import { FaShoppingCart, FaInfoCircle, FaShoppingBag } from 'react-icons/fa';
+import NotificationBox from './common/NotificationBox';
 
 function Home() {
     const [books, setBooks] = useState([]);
     const [categories, setCategories] = useState([]);
     const [featuredBooks, setFeaturedBooks] = useState([]);
+    const [mostSellingBooks, setMostSellingBooks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [notification, setNotification] = useState({ type: '', message: '' });
+    const [cartItems, setCartItems] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -21,9 +26,15 @@ function Home() {
                     axios.get('/categories/')
                 ]);
 
-                setBooks(booksRes.data);
+                const allBooks = booksRes.data;
+                setBooks(allBooks);
                 setCategories(categoriesRes.data);
-                setFeaturedBooks(booksRes.data.filter(book => book.featured));
+                setFeaturedBooks(allBooks.filter(book => book.featured));
+                
+                // Sort books by total_reviews as a proxy for most selling
+                const sortedByReviews = [...allBooks].sort((a, b) => b.total_reviews - a.total_reviews);
+                setMostSellingBooks(sortedByReviews.slice(0, 4));
+                
                 setLoading(false);
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -36,15 +47,27 @@ function Home() {
         };
 
         fetchData();
+        fetchCartItems();
     }, []);
+
+    const fetchCartItems = async () => {
+        try {
+            const response = await cartAPI.getCurrentCart();
+            setCartItems(response.data.items || []);
+        } catch (error) {
+            console.error('Error fetching cart:', error);
+        }
+    };
+
+    const isInCart = (bookId) => {
+        return cartItems.some(item => item.book === bookId);
+    };
 
     const handleAddToCart = async (bookId) => {
         try {
-            await axios.post('/orders/carts/add_item/', {
-                book_id: bookId,
-                quantity: 1
-            });
-
+            await cartAPI.addToCart(bookId, 1);
+            await fetchCartItems(); // Refresh cart items
+            
             setNotification({
                 type: 'success',
                 message: 'Book added to cart successfully!'
@@ -54,8 +77,7 @@ function Home() {
             
             if (error.response?.status === 401) {
                 errorMessage = 'Please login to add items to cart';
-                // Optionally redirect to login
-                // navigate('/login');
+                navigate('/login');
             } else if (error.response?.data?.error) {
                 errorMessage = error.response.data.error;
             }
@@ -77,22 +99,34 @@ function Home() {
             </div>
             <div className="book-card__content">
                 <h3 className="book-card__title">{book.title}</h3>
-                <p className="book-card__author">
-                    By {book.authors_details?.map(author => author.user).join(', ')}
-                </p>
-                <div className="book-card__price">₹{book.price}</div>
+                <div className="book-card__meta">
+                    <span className="price">Rs.{book.price}</span>
+                    <div className="rating">
+                        <span className="stars">{'★'.repeat(Math.round(book.average_rating))}</span>
+                        <span className="count">({book.total_reviews} reviews)</span>
+                    </div>
+                </div>
                 <div className="book-card__actions">
-                    <button 
-                        className="btn btn-primary"
-                        onClick={() => handleAddToCart(book.id)}
-                    >
-                        Add to Cart
-                    </button>
+                    {isInCart(book.id) ? (
+                        <Link to="/cart" className="view-cart">
+                            <FaShoppingBag className="icon" />
+                            <span>View Cart</span>
+                        </Link>
+                    ) : (
+                        <button 
+                            className="add-to-cart"
+                            onClick={() => handleAddToCart(book.id)}
+                        >
+                            <FaShoppingCart className="icon" />
+                            <span>Add to Cart</span>
+                        </button>
+                    )}
                     <Link 
                         to={`/book/${book.id}`} 
-                        className="btn btn-secondary"
+                        className="view-details"
                     >
-                        View Details
+                        <FaInfoCircle className="icon" />
+                        <span>View Details</span>
                     </Link>
                 </div>
             </div>
@@ -113,52 +147,66 @@ function Home() {
             <Banner />
 
             {notification.message && (
-                <div className={`notification-box notification-box--${notification.type}`}>
-                    <span>{notification.message}</span>
-                    <button 
-                        className="notification-box__close"
-                        onClick={() => setNotification({ type: '', message: '' })}
-                    >
-                        ×
-                    </button>
-                </div>
+                <NotificationBox 
+                    message={notification.message}
+                    type={notification.type}
+                    onClose={() => setNotification({ type: '', message: '' })}
+                />
             )}
 
             <main className="container">
                 {/* Featured Books Section */}
-                <section className="featured-books">
-                    <h2>Featured Books</h2>
-                    <div className="book-grid">
-                        {featuredBooks.map(book => (
-                            <BookCard key={book.id} book={book} />
-                        ))}
+                <section className="featured-books section">
+                    <div className="container">
+                        <h2 className="section-title">Featured Books</h2>
+                        <div className="book-grid">
+                            {featuredBooks.map(book => (
+                                <BookCard key={book.id} book={book} />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Most Selling Books Section */}
+                <section className="most-selling section">
+                    <div className="container">
+                        <h2 className="section-title">Most Popular Books</h2>
+                        <div className="book-grid">
+                            {mostSellingBooks.map(book => (
+                                <BookCard key={book.id} book={book} />
+                            ))}
+                        </div>
                     </div>
                 </section>
 
                 {/* Categories Section */}
-                <section className="categories">
-                    <h2>Browse by Category</h2>
-                    <div className="category-grid">
-                        {categories.map(category => (
-                            <Link 
-                                key={category.id} 
-                                to={`/category/${category.slug}`}
-                                className="category-card"
-                            >
-                                <h3>{category.name}</h3>
-                                <span>{category.book_count} Books</span>
-                            </Link>
-                        ))}
+                <section className="categories section">
+                    <div className="container">
+                        <h2 className="section-title">Browse by Category</h2>
+                        <div className="category-grid">
+                            {categories.map(category => (
+                                <Link 
+                                    key={category.id} 
+                                    to={`/category/${category.slug}`}
+                                    className="category-card"
+                                >
+                                    <h3>{category.name}</h3>
+                                    <span className="book-count">{category.book_count} Books</span>
+                                </Link>
+                            ))}
+                        </div>
                     </div>
                 </section>
 
                 {/* All Books Section */}
-                <section className="all-books">
-                    <h2>All Books</h2>
-                    <div className="book-grid">
-                        {books.map(book => (
-                            <BookCard key={book.id} book={book} />
-                        ))}
+                <section className="all-books section">
+                    <div className="container">
+                        <h2 className="section-title">All Books</h2>
+                        <div className="book-grid">
+                            {books.map(book => (
+                                <BookCard key={book.id} book={book} />
+                            ))}
+                        </div>
                     </div>
                 </section>
             </main>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import './admin.css'; // Optional: Create a CSS file for styling
+// import './admin.css'; // Optional: Create a CSS file for styling
 
 function Sidebar() {
     return (
@@ -8,6 +8,7 @@ function Sidebar() {
             <h2>Admin Menu</h2>
             <ul>
                 <li><Link to="/admin/manage-books">Manage Books</Link></li>
+                <li><Link to="/admin/manage-books/new">Add New Book</Link></li>
                 <li><Link to="/admin/manage-orders">Manage Orders</Link></li>
                 <li><Link to="/admin/manage-users">Manage Users</Link></li>
                 <li><Link to="/admin/manage-payments">Manage Payments</Link></li>

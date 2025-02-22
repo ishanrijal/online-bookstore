@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from '../utils/axios';
 
 const AuthContext = createContext(null);
 
@@ -8,32 +9,35 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check for user data in localStorage on initial load
-        const storedUser = localStorage.getItem('user');
-        const token = localStorage.getItem('access_token');
-        
-        if (storedUser && token) {
-            setUser(JSON.parse(storedUser));
-        }
-        setLoading(false);
+        checkAuth();
     }, []);
 
-    const updateUser = (userData) => {
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+    const checkAuth = async () => {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            try {
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                const response = await axios.get('/users/me/');
+                setUser(response.data);
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+            }
+        }
+        setLoading(false);
     };
 
     const login = (userData, token) => {
         setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('access_token', token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     };
 
     const logout = () => {
         setUser(null);
-        localStorage.removeItem('user');
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        delete axios.defaults.headers.common['Authorization'];
     };
 
     if (loading) {
@@ -41,8 +45,8 @@ export const AuthProvider = ({ children }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ user, updateUser, login, logout }}>
-            {children}
+        <AuthContext.Provider value={{ user, login, logout, loading }}>
+            {!loading && children}
         </AuthContext.Provider>
     );
 };

@@ -42,55 +42,55 @@ const Login = () => {
         setNotification({ type: '', message: '' });
 
         try {
+            // Get tokens
             const response = await axios.post('/users/token/', {
                 username: formData.email.trim(),
                 password: formData.password
             });
 
+            const accessToken = response.data.access;
+            const refreshToken = response.data.refresh;
+
             // Store tokens
-            localStorage.setItem('access_token', response.data.access);
-            localStorage.setItem('refresh_token', response.data.refresh);
+            localStorage.setItem('access_token', accessToken);
+            localStorage.setItem('refresh_token', refreshToken);
+
+            // Set token in axios defaults
+            axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
             // Get user data
-            const userResponse = await axios.get('/users/me/', {
-                headers: {
-                    'Authorization': `Bearer ${response.data.access}`
-                }
-            });
+            const userResponse = await axios.get('/users/me/');
+            const userData = userResponse.data;
 
-            // Update auth context with user data and token
-            login(userResponse.data, response.data.access);
+            // Update auth context
+            login(userData, accessToken);
             
             setNotification({
                 type: 'success',
                 message: 'Login successful! Redirecting...'
             });
 
-            // Short delay before navigation to show success message
-            setTimeout(() => {
+            // Navigate based on role
+            if (userData.role === 'ADMIN') {
+                navigate('/admin');
+            } else {
                 navigate('/dashboard');
-            }, 1500);
+            }
 
         } catch (error) {
             console.error('Login error:', error);
             
+            let errorMessage = 'Login failed. Please try again.';
             if (error.response?.data?.detail) {
-                setNotification({
-                    type: 'error',
-                    message: error.response.data.detail
-                });
-            } else if (error.response?.data) {
-                const errorMessage = Object.values(error.response.data)[0];
-                setNotification({
-                    type: 'error',
-                    message: Array.isArray(errorMessage) ? errorMessage[0] : errorMessage
-                });
-            } else {
-                setNotification({
-                    type: 'error',
-                    message: 'Login failed. Please try again.'
-                });
+                errorMessage = error.response.data.detail;
+            } else if (error.response?.data?.error) {
+                errorMessage = error.response.data.error;
             }
+            
+            setNotification({
+                type: 'error',
+                message: errorMessage
+            });
         } finally {
             setIsLoading(false);
         }

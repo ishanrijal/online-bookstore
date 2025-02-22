@@ -3,23 +3,55 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from '../utils/axios';
 import Header from './Header';
 import Footer from './Footer';
+import { 
+    FaShoppingCart, 
+    FaTrashAlt, 
+    FaPlus, 
+    FaMinus, 
+    FaArrowLeft,
+    FaShoppingBag,
+    FaRupeeSign 
+} from 'react-icons/fa';
 import '../sass/components/_cart.sass';
+import { cartAPI } from '../utils/axios';
+import { useAuth } from '../context/AuthContext';
+import NotificationBox from './common/NotificationBox';
 
 const Cart = () => {
-    const [cart, setCart] = useState(null);
+    const { user } = useAuth();
+    const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [notification, setNotification] = useState({ type: '', message: '' });
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetchCart();
-    }, []);
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+        fetchCartItems();
+    }, [user, navigate]);
 
-    const fetchCart = async () => {
+    const fetchCartItems = async () => {
         try {
-            const response = await axios.get('/orders/carts/current/');
-            setCart(response.data);
+            const response = await cartAPI.getCurrentCart();
+            setCartItems(response.data.items || []);
             setLoading(false);
+        } catch (error) {
+            if (error.response?.status === 401) {
+                navigate('/login');
+                return;
+            }
+            setError('Failed to load cart items');
+            setLoading(false);
+        }
+    };
+
+    const handleIncrement = async (bookId, currentQuantity) => {
+        try {
+            await cartAPI.updateQuantity(bookId, currentQuantity + 1);
+            await fetchCartItems();
         } catch (error) {
             if (error.response?.status === 401) {
                 navigate('/login');
@@ -27,21 +59,24 @@ const Cart = () => {
             }
             setNotification({
                 type: 'error',
-                message: 'Failed to load cart'
+                message: error.response?.data?.error || 'Failed to update quantity'
             });
-            setLoading(false);
         }
     };
 
-    const updateQuantity = async (itemId, newQuantity) => {
+    const handleDecrement = async (bookId, currentQuantity) => {
         try {
-            const cartId = cart.id;
-            await axios.post(`/orders/carts/${cartId}/update_quantity/`, {
-                item_id: itemId,
-                quantity: newQuantity
-            });
-            fetchCart(); // Refresh cart after update
+            if (currentQuantity <= 1) {
+                await removeItem(bookId);
+                return;
+            }
+            await cartAPI.updateQuantity(bookId, currentQuantity - 1);
+            await fetchCartItems();
         } catch (error) {
+            if (error.response?.status === 401) {
+                navigate('/login');
+                return;
+            }
             setNotification({
                 type: 'error',
                 message: error.response?.data?.error || 'Failed to update quantity'
@@ -49,27 +84,33 @@ const Cart = () => {
         }
     };
 
-    const removeItem = async (itemId) => {
+    const removeItem = async (bookId) => {
         try {
-            const cartId = cart.id;
-            await axios.post(`/orders/carts/${cartId}/remove_item/`, {
-                item_id: itemId
-            });
-            fetchCart(); // Refresh cart after removal
+            await cartAPI.removeCartItem(bookId);
+            await fetchCartItems();
             setNotification({
                 type: 'success',
-                message: 'Item removed from cart'
+                message: 'Item removed successfully'
             });
         } catch (error) {
+            if (error.response?.status === 401) {
+                navigate('/login');
+                return;
+            }
             setNotification({
                 type: 'error',
-                message: 'Failed to remove item'
+                message: error.response?.data?.error || 'Failed to remove item'
             });
         }
     };
 
     const handleCheckout = () => {
         navigate('/checkout');
+    };
+
+    const formatPrice = (price) => {
+        // Remove leading zeros and format to 2 decimal places only if there are decimal values
+        return Number(price).toFixed(2).replace(/^0+/, '');
     };
 
     if (loading) {
@@ -80,102 +121,107 @@ const Cart = () => {
         );
     }
 
+    if (error) {
+        return <div>{error}</div>;
+    }
+
     return (
         <>
             <Header />
             <main className="cart">
                 {notification.message && (
-                    <div className={`notification-box notification-box--${notification.type}`}>
-                        <span>{notification.message}</span>
-                        <button 
-                            className="notification-box__close"
-                            onClick={() => setNotification({ type: '', message: '' })}
-                        >
-                            ×
-                        </button>
-                    </div>
+                    <NotificationBox 
+                        message={notification.message}
+                        type={notification.type}
+                        onClose={() => setNotification({ type: '', message: '' })}
+                    />
                 )}
-
+                
                 <div className="cart__container">
-                    <h1>Shopping Cart</h1>
+                    <h1>
+                        <FaShoppingCart className="icon" /> Your Cart
+                    </h1>
                     
-                    {!cart?.items?.length ? (
+                    {cartItems.length === 0 ? (
                         <div className="cart__empty">
+                            <FaShoppingBag className="empty-cart-icon" />
                             <p>Your cart is empty</p>
                             <Link to="/" className="btn btn-primary">
-                                Continue Shopping
+                                <FaArrowLeft className="icon" /> Continue Shopping
                             </Link>
                         </div>
                     ) : (
-                        <>
-                            <div className="cart__items">
-                                {cart.items.map(item => (
-                                    <div key={item.id} className="cart-item">
-                                        <div className="cart-item__image">
-                                            <img 
-                                                src={item.book_cover || '/default-book-cover.jpg'} 
-                                                alt={item.book_title} 
-                                            />
-                                        </div>
-                                        <div className="cart-item__details">
-                                            <Link to={`/book/${item.book}`}>
-                                                <h3>{item.book_title}</h3>
-                                            </Link>
-                                            <p className="cart-item__price">
-                                                ₹{item.book_price}
-                                            </p>
-                                        </div>
-                                        <div className="cart-item__quantity">
-                                            <button 
-                                                onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                                                disabled={item.quantity <= 1}
-                                            >
-                                                -
-                                            </button>
-                                            <span>{item.quantity}</span>
-                                            <button 
-                                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                            >
-                                                +
-                                            </button>
-                                        </div>
-                                        <div className="cart-item__subtotal">
-                                            ₹{item.subtotal}
-                                        </div>
+                        <div className="cart__items">
+                            {cartItems.map(item => (
+                                <div key={item.id} className="cart-item">
+                                    <div className="cart-item__image">
+                                        <img 
+                                            src={item.book_cover || '/default-book-cover.jpg'} 
+                                            alt={item.book_title} 
+                                        />
+                                    </div>
+                                    <div className="cart-item__details">
+                                        <Link to={`/book/${item.book}`} className="book-title">
+                                            <h3>{item.book_title}</h3>
+                                        </Link>
+                                        <p className="cart-item__price">
+                                            Rs. {formatPrice(item.book_price)}
+                                        </p>
+                                    </div>
+                                    <div className="cart-item__quantity">
                                         <button 
-                                            className="cart-item__remove"
-                                            onClick={() => removeItem(item.id)}
-                                            aria-label="Remove item"
+                                            onClick={() => handleDecrement(item.book, item.quantity)}
+                                            disabled={item.quantity <= 1}
+                                            className="quantity-btn"
                                         >
-                                            ×
+                                            <FaMinus className="icon" />
+                                        </button>
+                                        <span>{item.quantity}</span>
+                                        <button 
+                                            onClick={() => handleIncrement(item.book, item.quantity)}
+                                            className="quantity-btn"
+                                        >
+                                            <FaPlus className="icon" />
                                         </button>
                                     </div>
-                                ))}
-                            </div>
-
+                                    <div className="cart-item__subtotal">
+                                        <span className="label">Subtotal:</span>
+                                        <span className="amount">
+                                            Rs. {formatPrice(item.subtotal)}
+                                        </span>
+                                    </div>
+                                    <button 
+                                        className="cart-item__remove"
+                                        onClick={() => removeItem(item.book)}
+                                        aria-label="Remove item"
+                                    >
+                                        <FaTrashAlt className="icon" />
+                                    </button>
+                                </div>
+                            ))}
                             <div className="cart__summary">
                                 <div className="cart__summary-details">
                                     <div className="summary-row">
-                                        <span>Subtotal ({cart.items_count} items):</span>
-                                        <span>₹{cart.total_price}</span>
+                                        <span>Subtotal ({cartItems.length} items)</span>
+                                        <span>Rs. {formatPrice(cartItems.reduce((sum, item) => sum + item.subtotal, 0))}</span>
                                     </div>
                                     <div className="summary-row">
-                                        <span>Shipping:</span>
+                                        <span>Shipping</span>
                                         <span>Free</span>
                                     </div>
                                     <div className="summary-row total">
-                                        <span>Total:</span>
-                                        <span>₹{cart.total_price}</span>
+                                        <span>Total</span>
+                                        <span>Rs. {formatPrice(cartItems.reduce((sum, item) => sum + item.subtotal, 0))}</span>
                                     </div>
                                 </div>
                                 <button 
                                     className="btn btn-primary checkout-btn"
                                     onClick={handleCheckout}
                                 >
-                                    Proceed to Checkout
+                                    <FaShoppingBag className="icon" /> Proceed to Checkout
                                 </button>
                             </div>
-                        </>
+                        </div>
                     )}
                 </div>
             </main>

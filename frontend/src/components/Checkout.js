@@ -6,6 +6,7 @@ import Footer from './Footer';
 import LoaderModal from './common/LoaderModal';
 import NotificationBox from './common/NotificationBox';
 import '../sass/components/_checkout.sass';
+import { FaShoppingBag, FaRupeeSign } from 'react-icons/fa';
 
 const Checkout = () => {
     const navigate = useNavigate();
@@ -68,19 +69,14 @@ const Checkout = () => {
         setIsProcessing(true);
 
         try {
-            // Create order first
-            const orderResponse = await axios.post('/orders/orders/', {
+            // Create order using the orders endpoint
+            const orderResponse = await axios.post('/orders/orders/checkout/', {
                 shipping_address: shippingDetails.address,
-                contact_number: shippingDetails.contact_number
+                contact_number: shippingDetails.contact_number,
+                payment_method: paymentMethod
             });
 
-            // Then create payment
-            const paymentResponse = await axios.post('/payments/', {
-                order: orderResponse.data.id,
-                payment_type: paymentMethod,
-            });
-
-            if (paymentResponse.data.status === 'PENDING' || paymentResponse.data.status === 'COMPLETED') {
+            if (orderResponse.data.status === 'success') {
                 switch (paymentMethod) {
                     case 'CASH':
                         setCart(null);
@@ -94,30 +90,36 @@ const Checkout = () => {
                     case 'KHALTI':
                         const khaltiConfig = {
                             publicKey: process.env.REACT_APP_KHALTI_PUBLIC_KEY,
-                            productIdentity: orderResponse.data.id,
+                            productIdentity: orderResponse.data.order_id,
                             productName: "Book Order",
                             productUrl: "http://localhost:3000",
                             eventHandler: {
                                 onSuccess: async (payload) => {
-                                    await axios.post(`/payments/${paymentResponse.data.id}/verify_khalti/`, payload);
+                                    await axios.post(`/payments/verify-khalti/`, {
+                                        ...payload,
+                                        order_id: orderResponse.data.order_id
+                                    });
                                     setOrderSuccess(true);
                                     setNotification({
                                         type: 'success',
-                                        message: 'Order placed successfully!'
+                                        message: 'Payment successful!'
                                     });
                                 },
                                 onError: (error) => {
-                                    navigate(`/payment/failure/${paymentResponse.data.id}`);
+                                    setNotification({
+                                        type: 'error',
+                                        message: 'Payment failed'
+                                    });
                                 },
                                 onClose: () => {
                                     console.log('Khalti widget closed');
                                 }
                             },
-                            amount: cart.total_price * 100 // Convert to paisa
+                            amount: orderResponse.data.total_amount * 100 // Convert to paisa
                         };
                         
                         const checkout = new window.KhaltiCheckout(khaltiConfig);
-                        checkout.show({ amount: cart.total_price * 100 });
+                        checkout.show({ amount: orderResponse.data.total_amount * 100 });
                         break;
                     
                     case 'ESEWA':
@@ -127,15 +129,15 @@ const Checkout = () => {
                         form.setAttribute('action', 'https://uat.esewa.com.np/epay/main');
                         
                         const params = {
-                            amt: cart.total_price,
+                            amt: orderResponse.data.total_amount,
                             psc: 0,
                             pdc: 0,
                             txAmt: 0,
-                            tAmt: cart.total_price,
-                            pid: orderResponse.data.id,
+                            tAmt: orderResponse.data.total_amount,
+                            pid: orderResponse.data.order_id,
                             scd: process.env.REACT_APP_ESEWA_MERCHANT_CODE,
-                            su: `${window.location.origin}/payment/success/${paymentResponse.data.id}`,
-                            fu: `${window.location.origin}/payment/failure/${paymentResponse.data.id}`
+                            su: `${window.location.origin}/payment/success/${orderResponse.data.order_id}`,
+                            fu: `${window.location.origin}/payment/failure/${orderResponse.data.order_id}`
                         };
                         
                         Object.keys(params).forEach(key => {
@@ -161,11 +163,15 @@ const Checkout = () => {
             console.error('Checkout error:', error);
             setNotification({
                 type: 'error',
-                message: error.response?.data?.detail || 'Failed to process order'
+                message: error.response?.data?.error || 'Failed to process order'
             });
         } finally {
             setIsProcessing(false);
         }
+    };
+
+    const formatPrice = (price) => {
+        return Number(price).toFixed(2).replace(/^0+/, '');
     };
 
     if (loading && !orderSuccess) {
@@ -278,18 +284,25 @@ const Checkout = () => {
                                     {cart.items.map(item => (
                                         <div key={item.id} className="summary-item">
                                             <span>{item.book_title} × {item.quantity}</span>
-                                            <span>₹{item.subtotal}</span>
+                                            <span>
+                                                <FaRupeeSign className="currency-icon" />
+                                                {formatPrice(item.subtotal)}
+                                            </span>
                                         </div>
                                     ))}
                                 </div>
                                 <div className="summary-total">
                                     <span>Total Amount:</span>
-                                    <span>₹{cart.total_price}</span>
+                                    <span>
+                                        <FaRupeeSign className="currency-icon" />
+                                        {formatPrice(cart.total_price)}
+                                    </span>
                                 </div>
                                 <button 
-                                    className="btn btn-primary place-order-btn"
+                                    className="place-order-btn"
                                     onClick={handleCheckout}
                                 >
+                                    <FaShoppingBag className="icon" />
                                     Place Order
                                 </button>
                             </div>

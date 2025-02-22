@@ -62,16 +62,16 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CartItem
-        fields = ['id', 'book', 'book_title', 'book_price', 'book_cover', 'quantity', 'subtotal']
+        fields = ['id', 'book', 'quantity', 'book_title', 'book_price', 'book_cover', 'subtotal']
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
     total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    items_count = serializers.IntegerField(source='items.count', read_only=True)
+    items_count = serializers.IntegerField(source='get_items_count', read_only=True)
 
     class Meta:
         model = Cart
-        fields = ['id', 'items', 'total_price', 'items_count', 'created_at', 'updated_at']
+        fields = ['id', 'items', 'total_price', 'items_count']
 
 class InvoiceSerializer(serializers.ModelSerializer):
     order_details = OrderDetailSerializer(source='order.order_details', many=True, read_only=True)

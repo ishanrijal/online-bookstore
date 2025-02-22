@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-+72bi4^o18_kpj$heg*6lddcpuv%ttlx8gr)nyeg#c9bm1+-h3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -73,10 +73,15 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
+# Remove or comment out the CORS_ALLOWED_ORIGINS setting to allow all origins
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+# ]
 
+# You can also use CORS_ORIGIN_ALLOW_ALL (older version)
+# CORS_ORIGIN_ALLOW_ALL = True
+
+# Additional CORS settings you might want to keep
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',

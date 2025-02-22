@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from '../../../utils/axios';
 import LoadingBox from '../../common/LoadingBox';
 import NotificationBox from '../../common/NotificationBox';
-import '../admin.css';
+// import '../admin.css';
 
 function EditBook() {
     const { id } = useParams();

@@ -1,5 +1,5 @@
 import React from 'react';
-import './admin.css'; // Optional: Create a CSS file for styling
+//import './admin.css'; // Optional: Create a CSS file for styling
 
 function Header() {
     return (

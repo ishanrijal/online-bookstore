@@ -1,7 +1,16 @@
+# Core Django & REST Framework
 asgiref==3.8.1
 Django==5.1.4
-mysqlclient==2.2.6
-sqlparse==0.5.3
-Pillow==11.1.0
-django-cors-headers==4.6.0 
 djangorestframework==3.15.2
+djangorestframework-simplejwt==5.3.1  # For JWT authentication
+
+# Database
+mysqlclient==2.2.6
+
+# Utilities
+sqlparse==0.5.3
+Pillow==11.1.0  # For image handling
+django-cors-headers==4.6.0  # For handling CORS
+
+requests==2.31.0
+reportlab==4.0.1

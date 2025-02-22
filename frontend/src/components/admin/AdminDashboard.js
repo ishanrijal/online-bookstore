@@ -1,90 +1,37 @@
-import React, { useState } from 'react';
-import { Outlet, useNavigate, Link } from 'react-router-dom';
-import Sidebar from './Sidebar';
-import { useAuth } from '../../context/AuthContext';
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import Header from '../Header';
+import Footer from '../Footer';
+import AdminSidebar from './Sidebar';
+import AdminOverview from './AdminOverview';
+import ManageBooks from './books/ManageBooks';
+import ManageOrders from './orders/ManageOrders';
+import ManageUsers from './ManageUsers';
+import ManagePayments from './ManagePayments';
+import ManageReviews from './ManageReviews';
+import AddBook from './books/AddBook';
 import './admin.css';
 
 const AdminDashboard = () => {
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
-    const [showProfileMenu, setShowProfileMenu] = useState(false);
-
-    const handleLogout = () => {
-        logout();
-        navigate('/');
-    };
-
     return (
-        <div className="admin-dashboard">
-            <header className="admin-header">
-                <div className="header-left">
-                    <h1>Admin Dashboard</h1>
-                </div>
-                <div className="header-right">
-                    <div className="profile-section">
-                        <div 
-                            className="profile-trigger"
-                            onClick={() => setShowProfileMenu(!showProfileMenu)}
-                        >
-                            <div className="profile-avatar">
-                                {user.profile_picture ? (
-                                    <img 
-                                        src={user.profile_picture} 
-                                        alt={user.username}
-                                    />
-                                ) : (
-                                    <div className="avatar-placeholder">
-                                        {user.first_name?.charAt(0) || user.username.charAt(0)}
-                                    </div>
-                                )}
-                            </div>
-                            <span className="profile-name">{user.first_name || user.username}</span>
-                        </div>
-                        
-                        {showProfileMenu && (
-                            <div className="profile-dropdown">
-                                <ul>
-                                    <li onClick={() => navigate('/admin/profile')}>
-                                        Profile Settings
-                                    </li>
-                                    <li onClick={handleLogout}>
-                                        Logout
-                                    </li>
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </header>
-            
-            <div className="admin-content">
-                <div className="admin-sidebar">
-                    <h2>Admin Menu</h2>
-                    <nav>
-                        <ul>
-                            <li>
-                                <Link to="/admin/manage-books">Manage Books</Link>
-                            </li>
-                            <li>
-                                <Link to="/admin/manage-orders">Manage Orders</Link>
-                            </li>
-                            <li>
-                                <Link to="/admin/manage-users">Manage Users</Link>
-                            </li>
-                            <li>
-                                <Link to="/admin/manage-payments">Manage Payments</Link>
-                            </li>
-                            <li>
-                                <Link to="/admin/manage-reviews">Manage Reviews</Link>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
-                <main className="main-content">
-                    <Outlet />
+        <>
+            <Header />
+            <div className="dashboard">
+                <AdminSidebar />
+                <main className="dashboard__content">
+                    <Routes>
+                        <Route index element={<AdminOverview />} />
+                        <Route path="manage-books/*" element={<ManageBooks />} />
+                        <Route path="manage-books/new" element={<AddBook />} />
+                        <Route path="manage-orders" element={<ManageOrders />} />
+                        <Route path="manage-users" element={<ManageUsers />} />
+                        <Route path="manage-payments" element={<ManagePayments />} />
+                        <Route path="manage-reviews" element={<ManageReviews />} />
+                    </Routes>
                 </main>
             </div>
-        </div>
+            <Footer />
+        </>
     );
 };
 
