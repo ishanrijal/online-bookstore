@@ -15,6 +15,9 @@ import About from './components/About';
 import Contact from './components/Contact';
 import Categories from './components/Categories';
 import Cart from './components/Cart';
+import Checkout from './components/Checkout';
+import PaymentSuccess from './components/PaymentSuccess';
+import PaymentFailure from './components/PaymentFailure';
 // import NotFound from './components/NotFound';
 import './assets/css/style.css';  // Import the compiled CSS
 
@@ -42,6 +45,21 @@ function App() {
             <Route path="/cart" element={
               <ProtectedRoute roles={['READER']}>
                 <Cart />
+              </ProtectedRoute>
+            } />
+            <Route path="/checkout" element={
+              <ProtectedRoute roles={['READER']}>
+                <Checkout />
+              </ProtectedRoute>
+            } />
+            <Route path="/payment/success/:paymentId" element={
+              <ProtectedRoute roles={['READER']}>
+                <PaymentSuccess />
+              </ProtectedRoute>
+            } />
+            <Route path="/payment/failure/:paymentId" element={
+              <ProtectedRoute roles={['READER']}>
+                <PaymentFailure />
               </ProtectedRoute>
             } />
 
