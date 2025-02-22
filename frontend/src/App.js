@@ -10,6 +10,12 @@ import Login from './components/Login';
 import Register from './components/Signup';
 import UserDashboard from './components/dashboard/UserDashboard';
 import AdminDashboard from './components/admin/AdminDashboard';
+import BookDetail from './components/BookDetail';
+import About from './components/About';
+import Contact from './components/Contact';
+import Categories from './components/Categories';
+import Cart from './components/Cart';
+// import NotFound from './components/NotFound';
 import './assets/css/style.css';  // Import the compiled CSS
 
 function App() {
@@ -18,23 +24,36 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <Routes>
-            {/* Public routes */}
+            {/* Public routes - accessible to everyone */}
+            <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/book/:id" element={<BookDetail />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/categories" element={<Categories />} />
 
-            {/* Regular user routes */}
+            {/* Protected User Routes */}
             <Route path="/dashboard/*" element={
               <ProtectedRoute roles={['READER']}>
                 <UserDashboard />
               </ProtectedRoute>
             } />
+            <Route path="/cart" element={
+              <ProtectedRoute roles={['READER']}>
+                <Cart />
+              </ProtectedRoute>
+            } />
 
-            {/* Admin routes */}
+            {/* Protected Admin Routes */}
             <Route path="/admin/*" element={
               <ProtectedRoute roles={['ADMIN']}>
                 <AdminDashboard />
               </ProtectedRoute>
             } />
+
+            {/* Catch all - 404 */}
+            {/* <Route path="*" element={<NotFound />} /> */}
           </Routes>
         </CartProvider>
       </AuthProvider>

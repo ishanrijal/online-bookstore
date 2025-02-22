@@ -7,8 +7,10 @@ import Banner from './Banner';
 import Footer from './Footer';
 import { FaShoppingCart, FaInfoCircle, FaShoppingBag } from 'react-icons/fa';
 import NotificationBox from './common/NotificationBox';
+import { useAuth } from '../context/AuthContext';
 
 function Home() {
+    const { user } = useAuth();
     const [books, setBooks] = useState([]);
     const [categories, setCategories] = useState([]);
     const [featuredBooks, setFeaturedBooks] = useState([]);
@@ -47,8 +49,10 @@ function Home() {
         };
 
         fetchData();
-        fetchCartItems();
-    }, []);
+        if (user) {
+            fetchCartItems();
+        }
+    }, [user]);
 
     const fetchCartItems = async () => {
         try {
@@ -64,9 +68,14 @@ function Home() {
     };
 
     const handleAddToCart = async (bookId) => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
         try {
             await cartAPI.addToCart(bookId, 1);
-            await fetchCartItems(); // Refresh cart items
+            await fetchCartItems();
             
             setNotification({
                 type: 'success',
