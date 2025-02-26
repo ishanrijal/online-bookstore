@@ -1,12 +1,8 @@
 import React from 'react';
+import OrderList from './OrderList';
 
 function ManageOrders() {
-    return (
-        <div>
-            <h2>Manage Orders</h2>
-            {/* Add functionality to manage orders here */}
-        </div>
-    );
+    return <OrderList />;
 }
 
 export default ManageOrders; 

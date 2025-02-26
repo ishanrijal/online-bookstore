@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FaHome, FaUser, FaShoppingBag, FaHeart, FaStar, FaCog } from 'react-icons/fa';
+import { FaHome, FaUser, FaShoppingBag, FaHeart, FaStar, FaShoppingCart, FaBook } from 'react-icons/fa';
 import '../../sass/components/_dashboard.sass';
 
 const DashboardSidebar = () => {
@@ -17,6 +17,61 @@ const DashboardSidebar = () => {
         return location.pathname.includes(`/dashboard/${path}`) ? 'active' : '';
     };
 
+    // Define menu items based on user role
+    const getMenuItems = () => {
+        const menuItems = [
+            // Common items for all roles
+            {
+                to: '/dashboard',
+                icon: <FaHome className="icon" />,
+                text: 'Dashboard',
+                roles: ['READER', 'Author', 'Publisher']
+            },
+            {
+                to: '/dashboard/profile',
+                icon: <FaUser className="icon" />,
+                text: 'Profile',
+                roles: ['READER', 'Author', 'Publisher']
+            },
+            {
+                to: '/dashboard/reviews',
+                icon: <FaStar className="icon" />,
+                text: 'My Reviews',
+                roles: ['READER', 'Publisher']
+                // roles: ['READER', 'Author', 'Publisher']
+            },
+            // Reader-specific items
+            {
+                to: '/dashboard/orders',
+                icon: <FaShoppingBag className="icon" />,
+                text: 'My Orders',
+                roles: ['READER']
+            },
+            {
+                to: '/dashboard/wishlist',
+                icon: <FaHeart className="icon" />,
+                text: 'Wishlist',
+                roles: ['READER']
+            },
+            {
+                to: '/dashboard/cart',
+                icon: <FaShoppingCart className="icon" />,
+                text: 'My Cart',
+                roles: ['READER']
+            },
+            // Author/Publisher-specific items
+            {
+                to: '/dashboard/manage-books',
+                icon: <FaBook className="icon" />,
+                text: 'Manage Books',
+                roles: ['Author', 'Publisher']
+            }
+        ];
+
+        // Filter items based on user role
+        return menuItems.filter(item => item.roles.includes(user?.role));
+    };
+
     return (
         <div className="dashboard-sidebar">
             <div className="dashboard-sidebar__profile">
@@ -30,47 +85,20 @@ const DashboardSidebar = () => {
                     )}
                 </div>
                 <h3>{user.first_name || user.username}</h3>
-                <p>{user.email}</p>
+                <p className="user-email">{user.email}</p>
+                <p className="user-role">{user.role}</p>
             </div>
 
             <nav className="dashboard-sidebar__nav">
                 <ul>
-                    <li>
-                        <Link to="/dashboard" className={isActive('')}>
-                            <FaHome className="icon" />
-                            Dashboard
-                        </Link>
-                    </li>
-                    <li>
-                        <Link to="/dashboard/profile" className={isActive('profile')}>
-                            <FaUser className="icon" />
-                            Profile
-                        </Link>
-                    </li>
-                    <li>
-                        <Link to="/dashboard/orders" className={isActive('orders')}>
-                            <FaShoppingBag className="icon" />
-                            My Orders
-                        </Link>
-                    </li>
-                    <li>
-                        <Link to="/dashboard/wishlist" className={isActive('wishlist')}>
-                            <FaHeart className="icon" />
-                            Wishlist
-                        </Link>
-                    </li>
-                    <li>
-                        <Link to="/dashboard/reviews" className={isActive('reviews')}>
-                            <FaStar className="icon" />
-                            My Reviews
-                        </Link>
-                    </li>
-                    <li>
-                        <Link to="/dashboard/settings" className={isActive('settings')}>
-                            <FaCog className="icon" />
-                            Settings
-                        </Link>
-                    </li>
+                    {getMenuItems().map((item, index) => (
+                        <li key={index}>
+                            <Link to={item.to} className={isActive(item.to.split('/dashboard/')[1] || '')}>
+                                {item.icon}
+                                {item.text}
+                            </Link>
+                        </li>
+                    ))}
                 </ul>
             </nav>
         </div>

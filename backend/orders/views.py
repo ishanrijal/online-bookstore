@@ -1,18 +1,19 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from django.shortcuts import get_object_or_404
-from .models import Cart, CartItem, Order, OrderDetail, Invoice
+from .models import Cart, CartItem, Order, OrderDetail, Invoice, OrderHistory
 from .serializers import (
     CartSerializer, CartItemSerializer, 
     OrderSerializer, OrderDetailSerializer,
-    InvoiceSerializer
+    InvoiceSerializer, OrderHistorySerializer
 )
 from books.models import Book
 from django.http import FileResponse
 from .utils import generate_invoice_pdf
 from users.permissions import IsVerifiedUser
+from django.utils import timezone
 
 class CartViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]  # Re-enable authentication
@@ -184,36 +185,75 @@ class CartViewSet(viewsets.ModelViewSet):
             )
 
 class OrderViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
     serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        user = self.request.user
+        if user.is_staff or user.is_superuser:
+            return Order.objects.all()
+        return Order.objects.filter(user=user)
 
     def perform_create(self, serializer):
-        # Get the user's current cart
-        cart = Cart.objects.get(user=self.request.user)
-        
-        # Create order
-        order = serializer.save(
+        order = serializer.save(user=self.request.user)
+        OrderHistory.objects.create(
+            order=order,
             user=self.request.user,
-            total_price=cart.total_price
+            action=f"Order created with status {order.status}"
         )
 
-        # Create order details from cart items
-        for cart_item in cart.items.all():
-            # Calculate subtotal here instead of passing it
-            OrderDetail.objects.create(
+    def perform_update(self, serializer):
+        old_status = self.get_object().status
+        order = serializer.save()
+        if old_status != order.status:
+            OrderHistory.objects.create(
                 order=order,
-                book=cart_item.book,
-                quantity=cart_item.quantity,
-                price=cart_item.book.price  # Store individual book price
+                user=self.request.user,
+                action=f"Status changed from {old_status} to {order.status}"
             )
 
-        # Clear the cart
-        cart.items.all().delete()
+    @action(detail=True, methods=['get'])
+    def history(self, request, pk=None):
+        order = self.get_object()
+        history = OrderHistory.objects.filter(order=order).order_by('-timestamp')
+        serializer = OrderHistorySerializer(history, many=True)
+        return Response(serializer.data)
 
-        return order
+    @action(detail=True, methods=['post'])
+    def add_history(self, request, pk=None):
+        order = self.get_object()
+        action = request.data.get('action')
+        if not action:
+            return Response(
+                {'error': 'Action is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        history = OrderHistory.objects.create(
+            order=order,
+            user=request.user,
+            action=action
+        )
+        serializer = OrderHistorySerializer(history)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        try:
+            order = self.get_object()
+            
+            # Update order status
+            new_status = request.data.get('status')
+            if new_status:
+                order.status = new_status
+                order.save()
+            
+            serializer = self.get_serializer(order)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            return Response({
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):

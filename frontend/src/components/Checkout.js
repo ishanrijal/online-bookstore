@@ -285,7 +285,7 @@ const Checkout = () => {
                                         <div key={item.id} className="summary-item">
                                             <span>{item.book_title} × {item.quantity}</span>
                                             <span>
-                                                <FaRupeeSign className="currency-icon" />
+                                                Rs.
                                                 {formatPrice(item.subtotal)}
                                             </span>
                                         </div>
@@ -294,7 +294,7 @@ const Checkout = () => {
                                 <div className="summary-total">
                                     <span>Total Amount:</span>
                                     <span>
-                                        <FaRupeeSign className="currency-icon" />
+                                        Rs.
                                         {formatPrice(cart.total_price)}
                                     </span>
                                 </div>

@@ -74,7 +74,7 @@ class BookViewSet(BaseModelViewSet):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['title', 'isbn', 'authors__user__username', 'category__name']
+    search_fields = ['title', 'isbn', 'authors__user__username', 'categories__name']
     ordering_fields = ['price', 'created_at', 'average_rating']
 
     @action(detail=True, methods=['post'])
@@ -102,12 +102,12 @@ class BookViewSet(BaseModelViewSet):
         
         for order in user_orders:
             for detail in order.order_details.all():
-                favorite_categories.add(detail.book.category)
+                favorite_categories.update(detail.book.categories.all())
                 favorite_authors.update(detail.book.authors.all())
         
         # Get recommended books
         recommended_books = Book.objects.filter(
-            Q(category__in=favorite_categories) |
+            Q(categories__in=favorite_categories) |
             Q(authors__in=favorite_authors)
         ).exclude(
             order_details__order__user=request.user
@@ -170,7 +170,11 @@ class BookViewSet(BaseModelViewSet):
         category_slug = request.query_params.get('category', '')
         try:
             category = Category.objects.get(slug=category_slug)
-            books = self.queryset.filter(category=category)
+            books = self.queryset.filter(categories=category).prefetch_related(
+                'categories',
+                'authors',
+                'publisher'
+            )
             serializer = self.get_serializer(books, many=True)
             return Response(serializer.data)
         except Category.DoesNotExist:
@@ -193,10 +197,16 @@ class CategoryViewSet(BaseModelViewSet):
     lookup_field = 'slug'  # Allow looking up by slug
 
     def perform_destroy(self, instance):
-        # Move books to uncategorized before deleting
+        # Check if this is the Uncategorized category
         if instance.name.lower() != 'uncategorized':
-            default_category = Category.get_default_category()
-            instance.books.update(category_id=default_category)
+            # Get the default category
+            default_category = Category.objects.get(id=Category.get_default_category())
+            # Get all books that only have this category
+            books_to_update = instance.books.filter(categories__count=1)
+            # Add the default category to these books
+            for book in books_to_update:
+                book.categories.add(default_category)
+            # Now we can safely delete the category
             instance.delete()
         else:
             raise serializers.ValidationError("Cannot delete the Uncategorized category")

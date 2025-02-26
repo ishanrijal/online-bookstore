@@ -23,19 +23,24 @@ const AdminOverview = () => {
         try {
             const [booksRes, ordersRes, usersRes, reviewsRes] = await Promise.all([
                 axios.get('/books/'),
-                axios.get('/orders/'),
+                axios.get('/orders/orders/'),
                 axios.get('/users/'),
                 axios.get('/reviews/')
             ]);
 
+            const orders = ordersRes.data.results || ordersRes.data;
+            const books = booksRes.data.results || booksRes.data;
+            const users = usersRes.data.results || usersRes.data;
+            const reviews = reviewsRes.data.results || reviewsRes.data;
+
             setStats({
-                totalBooks: booksRes.data.length,
-                totalOrders: ordersRes.data.length,
-                totalUsers: usersRes.data.length,
-                totalReviews: reviewsRes.data.length
+                totalBooks: books.length,
+                totalOrders: orders.length,
+                totalUsers: users.length,
+                totalReviews: reviews.length
             });
 
-            setRecentOrders(ordersRes.data.slice(0, 5));
+            setRecentOrders(orders.slice(0, 5));
             setLoading(false);
         } catch (error) {
             console.error('Error fetching dashboard data:', error);

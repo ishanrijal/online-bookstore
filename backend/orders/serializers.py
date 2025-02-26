@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Order, OrderDetail, Cart, CartItem, Invoice
+from .models import Order, OrderDetail, Cart, CartItem, Invoice, OrderHistory
 
 class OrderDetailSerializer(serializers.ModelSerializer):
     book_title = serializers.CharField(source='book.title', read_only=True)
@@ -79,4 +79,14 @@ class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
         fields = '__all__'
-        read_only_fields = ['invoice_number', 'total_amount', 'order_details'] 
+        read_only_fields = ['invoice_number', 'total_amount', 'order_details']
+
+class OrderHistorySerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OrderHistory
+        fields = ['id', 'user', 'action', 'timestamp']
+
+    def get_user(self, obj):
+        return obj.user.username if obj.user else 'System' 

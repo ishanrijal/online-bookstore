@@ -25,18 +25,18 @@ class CategorySerializer(serializers.ModelSerializer):
 class BookSerializer(serializers.ModelSerializer):
     publisher_details = PublisherSerializer(source='publisher', read_only=True)
     authors_details = AuthorSerializer(source='authors', many=True, read_only=True)
-    category_name = serializers.CharField(source='category.name', read_only=True)
+    categories_details = CategorySerializer(source='categories', many=True, read_only=True)
     authors = AuthorSerializer(many=True, read_only=True)
 
     class Meta:
         model = Book
         fields = [
             'id', 'title', 'isbn', 'price', 'stock', 'description',
-            'category', 'language', 'publisher', 'authors',
+            'categories', 'language', 'publisher', 'authors',
             'featured', 'publication_date', 'page_count',
             'dimensions', 'weight', 'edition', 'average_rating',
             'total_reviews', 'cover_image', 'created_at', 'updated_at',
-            'category_name',
+            'categories_details',
             'publisher_details',
             'authors_details',
             'favorited_by'
@@ -47,12 +47,16 @@ class BookSerializer(serializers.ModelSerializer):
             'authors',
             'publisher_details',
             'authors_details',
+            'categories_details',
             'average_rating',
             'total_reviews',
             'favorited_by'
         ]
 
     def update(self, instance, validated_data):
+        # Get categories from validated_data if present
+        categories = validated_data.pop('categories', None)
+        
         # Remove all many-to-many and nested fields from validated_data
         validated_data.pop('publisher_details', None)
         validated_data.pop('authors_details', None)
@@ -62,6 +66,10 @@ class BookSerializer(serializers.ModelSerializer):
         # Update the instance with the remaining data
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+        
+        # Update categories if provided
+        if categories is not None:
+            instance.categories.set(categories)
         
         instance.save()
         return instance 

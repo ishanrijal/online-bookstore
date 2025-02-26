@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import axios from '../../utils/axios';
 import LoaderModal from '../common/LoaderModal';
@@ -6,17 +6,19 @@ import NotificationBox from '../common/NotificationBox';
 import '../../sass/components/_profile.sass';
 
 const Profile = () => {
-    const { user, updateUser } = useAuth();
+    const auth = useAuth();
+    const { user } = auth;
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
     const [notification, setNotification] = useState({ type: '', message: '' });
+    const [previewImage, setPreviewImage] = useState(null);
     const [formData, setFormData] = useState({
-        username: user.username || '',
-        email: user.email || '',
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        phone: user.phone || '',
-        address: user.address || '',
+        username: user?.username || '',
+        email: user?.email || '',
+        first_name: user?.first_name || '',
+        last_name: user?.last_name || '',
+        phone: user?.phone || '',
+        address: user?.address || '',
         profile_picture: null
     });
     const [passwordData, setPasswordData] = useState({
@@ -24,6 +26,21 @@ const Profile = () => {
         new_password: '',
         confirm_password: ''
     });
+
+    useEffect(() => {
+        if (user) {
+            setFormData(prev => ({
+                ...prev,
+                username: user.username || '',
+                email: user.email || '',
+                first_name: user.first_name || '',
+                last_name: user.last_name || '',
+                phone: user.phone || '',
+                address: user.address || '',
+            }));
+            setPreviewImage(null);
+        }
+    }, [user]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -48,40 +65,56 @@ const Profile = () => {
                 ...prev,
                 profile_picture: file
             }));
+            // Create preview URL
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewImage(reader.result);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setNotification({ type: '', message: '' });
 
         try {
             const formDataToSend = new FormData();
             
-            // Append all form fields to FormData
+            // Only append changed fields
             Object.keys(formData).forEach(key => {
-                // Only append if the value exists and is not null
-                if (formData[key] !== null && formData[key] !== undefined && formData[key] !== '') {
+                if (formData[key] !== null && formData[key] !== undefined && 
+                    formData[key] !== '' && (key === 'profile_picture' || formData[key] !== user[key])) {
                     formDataToSend.append(key, formData[key]);
                 }
             });
 
             const response = await axios.patch('/users/profile/', formDataToSend, {
                 headers: {
-                    'Content-Type': 'multipart/form-data'  // Important!
+                    'Content-Type': 'multipart/form-data'
                 }
             });
 
-            updateUser(response.data);
-            setNotification({
-                type: 'success',
-                message: 'Profile updated successfully!'
-            });
-            setIsEditing(false);
+            if (response.status === 200) {
+                setPreviewImage(null);
+                
+                setNotification({
+                    type: 'success',
+                    message: 'Profile updated successfully!'
+                });
+                setIsEditing(false);
+                
+                // Refresh the page after successful update
+                window.location.reload();
+            }
         } catch (error) {
+            console.error('Profile update error:', error);
             setNotification({
                 type: 'error',
-                message: error.response?.data?.detail || 'Failed to update profile'
+                message: error.response?.data?.detail || 
+                        error.response?.data?.message || 
+                        'Failed to update profile'
             });
         } finally {
             setLoading(false);
@@ -90,8 +123,8 @@ const Profile = () => {
 
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
+        setNotification({ type: '', message: '' });
         
-        // Validate passwords match
         if (passwordData.new_password !== passwordData.confirm_password) {
             setNotification({
                 type: 'error',
@@ -107,24 +140,28 @@ const Profile = () => {
                 new_password: passwordData.new_password
             });
 
-            setNotification({
-                type: 'success',
-                message: 'Password changed successfully!'
-            });
+            if (response.status === 200) {
+                setNotification({
+                    type: 'success',
+                    message: 'Password changed successfully!'
+                });
 
-            // Clear password fields
-            setPasswordData({
-                current_password: '',
-                new_password: '',
-                confirm_password: ''
-            });
+                setPasswordData({
+                    current_password: '',
+                    new_password: '',
+                    confirm_password: ''
+                });
+            }
         } catch (error) {
-            setNotification({
-                type: 'error',
-                message: error.response?.data?.detail || 
-                        error.response?.data?.message || 
-                        'Failed to change password'
-            });
+            console.error('Password change error:', error);
+            if (!error.response || error.response.status !== 200) {
+                setNotification({
+                    type: 'error',
+                    message: error.response?.data?.detail || 
+                            error.response?.data?.message || 
+                            'Failed to change password'
+                });
+            }
         } finally {
             setLoading(false);
         }
@@ -154,22 +191,34 @@ const Profile = () => {
 
             <div className="profile-content">
                 <div className="profile-info">
-                    <div className="profile-picture">
-                        {user.profile_picture ? (
-                            <img src={user.profile_picture} alt={user.username} />
-                        ) : (
-                            <div className="avatar-placeholder">
-                                {user.first_name?.charAt(0) || user.username.charAt(0)}
-                            </div>
-                        )}
-                        {isEditing && (
-                            <input 
-                                type="file" 
-                                accept="image/*"
-                                onChange={handleImageChange}
-                                className="profile-picture-input"
-                            />
-                        )}
+                    <div className="profile-picture-container">
+                        <div className="profile-picture">
+                            {previewImage ? (
+                                <img src={previewImage} alt={user?.username} />
+                            ) : user?.profile_picture ? (
+                                <img src={user.profile_picture} alt={user.username} />
+                            ) : (
+                                <div className="avatar-placeholder">
+                                    {user?.first_name?.charAt(0) || user?.username?.charAt(0)}
+                                </div>
+                            )}
+                            {isEditing && (
+                                <div className="profile-picture-overlay">
+                                    <label htmlFor="profile-picture-input" className="update-picture-label">
+                                        <i className="fas fa-camera"></i>
+                                        Update Photo
+                                    </label>
+                                    <input 
+                                        id="profile-picture-input"
+                                        type="file" 
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="profile-picture-input"
+                                        hidden
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <form onSubmit={handleSubmit} className="profile-form">

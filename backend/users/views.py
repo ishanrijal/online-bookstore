@@ -149,6 +149,34 @@ class UserViewSet(viewsets.ModelViewSet):
         # Implement password reset logic here
         return Response({'detail': 'Password reset email sent.'})
 
+    @action(detail=True, methods=['post'])
+    def admin_reset_password(self, request, pk=None):
+        """Admin endpoint to reset user's password without requiring old password"""
+        if not request.user.is_staff and not request.user.role == 'Admin':
+            return Response(
+                {'error': 'Only admin users can reset passwords'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        user = self.get_object()
+        new_password = request.data.get('new_password')
+        
+        if not new_password:
+            return Response(
+                {'error': 'New password is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user.set_password(new_password)
+            user.save()
+            return Response({'message': 'Password reset successfully'})
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

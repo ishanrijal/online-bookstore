@@ -301,6 +301,41 @@
                         background: #007bff
                         color: #fff
 
+        .submenu-trigger
+            display: flex
+            align-items: center
+            padding: 12px 20px
+            color: #333
+            text-decoration: none
+            transition: all 0.3s ease
+            cursor: pointer
+
+            &:hover
+                background-color: rgba(0, 0, 0, 0.05)
+
+            &.open
+                background-color: rgba(0, 0, 0, 0.05)
+
+            .chevron
+                margin-left: auto
+                transition: transform 0.3s ease
+
+                &.rotate
+                    transform: rotate(180deg)
+
+        .submenu
+            max-height: 0
+            overflow: hidden
+            transition: max-height 0.3s ease-out
+            background-color: rgba(0, 0, 0, 0.02)
+
+            &.show
+                max-height: 200px
+
+            li a
+                padding-left: 48px
+                font-size: 0.9em
+
 @media (max-width: 768px)
     .dashboard
         flex-direction: column

@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from '../../../utils/axios';
 import LoadingBox from '../../common/LoadingBox';
 import NotificationBox from '../../common/NotificationBox';
+import LoaderModal from '../../common/LoaderModal';
+import './EditBook.css';
 // import '../admin.css';
 
 function EditBook() {
@@ -15,7 +17,7 @@ function EditBook() {
     const [price, setPrice] = useState('');
     const [stock, setStock] = useState('');
     const [description, setDescription] = useState('');
-    const [category, setCategory] = useState('');
+    const [selectedCategories, setSelectedCategories] = useState([]);
     const [language, setLanguage] = useState('English');
     const [featured, setFeatured] = useState(false);
     const [publicationDate, setPublicationDate] = useState('');
@@ -29,14 +31,19 @@ function EditBook() {
     const [publishers, setPublishers] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const bookResponse = await axios.get(`/books/${id}/`);
-                const book = bookResponse.data;
+                const [bookResponse, publishersRes, categoriesRes] = await Promise.all([
+                    axios.get(`/books/${id}/`),
+                    axios.get('/publishers/'),
+                    axios.get('/categories/')
+                ]);
                 
+                const book = bookResponse.data;
                 setBookData(book);
                 
                 setTitle(book.title);
@@ -44,7 +51,7 @@ function EditBook() {
                 setPrice(book.price);
                 setStock(book.stock);
                 setDescription(book.description);
-                setCategory(book.category);
+                setSelectedCategories(book.categories || []);
                 setLanguage(book.language);
                 setFeatured(book.featured);
                 setPublicationDate(book.publication_date);
@@ -54,11 +61,6 @@ function EditBook() {
                 setEdition(book.edition);
                 setPublisher(book.publisher);
                 
-                const [publishersRes, categoriesRes] = await Promise.all([
-                    axios.get('/publishers/'),
-                    axios.get('/categories/')
-                ]);
-                
                 setPublishers(publishersRes.data);
                 setCategories(categoriesRes.data);
                 setLoading(false);
@@ -66,7 +68,7 @@ function EditBook() {
                 console.error('Error fetching data:', error);
                 setNotification({
                     show: true,
-                    message: 'Error loading book data',
+                    message: 'Error loading book data: ' + (error.response?.data?.detail || error.message),
                     type: 'error'
                 });
                 setLoading(false);
@@ -76,54 +78,78 @@ function EditBook() {
         fetchData();
     }, [id]);
 
+    const handleCategoryChange = (categoryId) => {
+        setSelectedCategories(prev => {
+            if (prev.includes(categoryId)) {
+                return prev.filter(id => id !== categoryId);
+            } else {
+                return [...prev, categoryId];
+            }
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setSaving(true);
         
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('isbn', isbn);
-        formData.append('price', price);
-        formData.append('stock', stock);
-        formData.append('description', description);
-        formData.append('category', category);
-        formData.append('language', language);
-        formData.append('featured', featured);
-        formData.append('publication_date', publicationDate);
-        formData.append('page_count', pageCount);
-        formData.append('dimensions', dimensions);
-        formData.append('weight', weight);
-        formData.append('edition', edition);
-        formData.append('publisher', publisher);
-        
-        if (coverImage) {
-            formData.append('cover_image', coverImage);
-        }
-
         try {
-            await axios.put(`/books/${id}/`, formData, {
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('isbn', isbn);
+            formData.append('price', price);
+            formData.append('stock', stock);
+            formData.append('description', description);
+            formData.append('language', language);
+            formData.append('featured', featured);
+            formData.append('publication_date', publicationDate);
+            formData.append('page_count', pageCount);
+            formData.append('dimensions', dimensions);
+            formData.append('weight', weight);
+            formData.append('edition', edition);
+            formData.append('publisher', publisher);
+            
+            selectedCategories.forEach(categoryId => {
+                formData.append('categories', categoryId);
+            });
+            
+            if (coverImage) {
+                formData.append('cover_image', coverImage);
+            }
+
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
+
+            const response = await axios.put(`/books/${id}/`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
+
             setNotification({
                 show: true,
                 message: 'Book updated successfully',
                 type: 'success'
             });
+
             setTimeout(() => {
                 navigate('/admin/manage-books');
             }, 2000);
+
         } catch (error) {
+            console.error('Error updating book:', error);
             setNotification({
                 show: true,
                 message: error.response?.data?.detail || 'Error updating book',
                 type: 'error'
             });
+        } finally {
+            setSaving(false);
         }
     };
 
     if (loading) {
-        return <LoadingBox message="Loading book data..." />;
+        return <LoadingBox />;
     }
 
     return (
@@ -135,6 +161,8 @@ function EditBook() {
                     onClose={() => setNotification({ ...notification, show: false })}
                 />
             )}
+            
+            {saving && <LoaderModal message="Saving book changes..." />}
             
             <div className="edit-book__header">
                 <h2>Edit Book</h2>
@@ -214,14 +242,22 @@ function EditBook() {
                     </div>
 
                     <div className="form-group">
-                        <label>Category</label>
-                        <input
-                            type="text"
-                            name="category"
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            required
-                        />
+                        <label>Categories</label>
+                        <div className="categories-checkbox-group">
+                            {categories.map(category => (
+                                <div key={category.id} className="category-checkbox">
+                                    <input
+                                        type="checkbox"
+                                        id={`category-${category.id}`}
+                                        checked={selectedCategories.includes(category.id)}
+                                        onChange={() => handleCategoryChange(category.id)}
+                                    />
+                                    <label htmlFor={`category-${category.id}`}>
+                                        {category.name}
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
                     <div className="form-group">
@@ -331,8 +367,11 @@ function EditBook() {
                 </div>
 
                 <div className="form-actions">
-                    <button type="submit" className="submit-button">
-                        Update Book
+                    <button type="submit" disabled={saving} className="submit-button">
+                        {saving ? 'Saving...' : 'Save Changes'}
+                    </button>
+                    <button type="button" onClick={() => navigate('/admin/manage-books')} className="cancel-button">
+                        Cancel
                     </button>
                 </div>
             </form>

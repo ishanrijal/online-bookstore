@@ -1,7 +1,8 @@
 .admin-dashboard {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    min-height: 100vh;
+    background-color: #f8f9fa;
 }
 
 .admin-content {
@@ -194,7 +195,8 @@
 
 .dashboard {
     display: flex;
-    min-height: calc(100vh - 140px); /* Adjust based on header and footer height */
+    flex: 1;
+    min-height: calc(100vh - 140px);
     background-color: #f8f9fa;
 }
 
@@ -202,6 +204,10 @@
     flex: 1;
     padding: 2rem;
     overflow-y: auto;
+    background: #fff;
+    margin: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 /* Stats Grid */
@@ -346,4 +352,16 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+}
+
+/* Sidebar */
+.dashboard-sidebar {
+    width: 280px;
+    background: #fff;
+    border-right: 1px solid #eee;
+    padding: 2rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
 } 

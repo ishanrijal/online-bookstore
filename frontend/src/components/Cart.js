@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from '../utils/axios';
+import { formatPrice, calculateCartTotal, calculateItemSubtotal } from '../utils/cartUtils';
 import Header from './Header';
 import Footer from './Footer';
 import { 
@@ -36,9 +37,13 @@ const Cart = () => {
     const fetchCartItems = async () => {
         try {
             const response = await cartAPI.getCurrentCart();
-            setCartItems(response.data.items || []);
+            console.log('Cart Response:', response.data);
+            const items = response.data.items || [];
+            console.log('Cart Items:', items);
+            setCartItems(items);
             setLoading(false);
         } catch (error) {
+            console.error('Cart fetch error:', error);
             if (error.response?.status === 401) {
                 navigate('/login');
                 return;
@@ -46,6 +51,25 @@ const Cart = () => {
             setError('Failed to load cart items');
             setLoading(false);
         }
+    };
+
+    // Calculate total price for debugging
+    const debugTotal = () => {
+        if (!cartItems.length) {
+            console.log('No cart items');
+            return 0;
+        }
+
+        const total = cartItems.reduce((sum, item) => {
+            const price = Number(item.book_price) || 0;
+            const quantity = Number(item.quantity) || 0;
+            const itemTotal = price * quantity;
+            console.log(`Item: ${item.book_title}, Price: ${price}, Quantity: ${quantity}, Total: ${itemTotal}`);
+            return sum + itemTotal;
+        }, 0);
+
+        console.log('Final Total:', total);
+        return total;
     };
 
     const handleIncrement = async (bookId, currentQuantity) => {
@@ -108,11 +132,6 @@ const Cart = () => {
         navigate('/checkout');
     };
 
-    const formatPrice = (price) => {
-        // Remove leading zeros and format to 2 decimal places only if there are decimal values
-        return Number(price).toFixed(2).replace(/^0+/, '');
-    };
-
     if (loading) {
         return (
             <div className="loading-spinner-container">
@@ -152,58 +171,69 @@ const Cart = () => {
                         </div>
                     ) : (
                         <div className="cart__items">
-                            {cartItems.map(item => (
-                                <div key={item.id} className="cart-item">
-                                    <div className="cart-item__image">
-                                        <img 
-                                            src={item.book_cover || '/default-book-cover.jpg'} 
-                                            alt={item.book_title} 
-                                        />
-                                    </div>
-                                    <div className="cart-item__details">
-                                        <Link to={`/book/${item.book}`} className="book-title">
-                                            <h3>{item.book_title}</h3>
-                                        </Link>
-                                        <p className="cart-item__price">
-                                            Rs. {formatPrice(item.book_price)}
-                                        </p>
-                                    </div>
-                                    <div className="cart-item__quantity">
+                            {cartItems.map(item => {
+                                const itemSubtotal = calculateItemSubtotal(item);
+                                console.log(`Item ${item.book_title} subtotal:`, itemSubtotal);
+                                
+                                return (
+                                    <div key={item.id} className="cart-item">
+                                        <div className="cart-item__image">
+                                            <img 
+                                                src={item.book_cover || '/default-book-cover.jpg'} 
+                                                alt={item.book_title} 
+                                            />
+                                        </div>
+                                        <div className="cart-item__details">
+                                            <Link to={`/book/${item.book}`} className="book-title">
+                                                <h3>{item.book_title}</h3>
+                                            </Link>
+                                            <p className="cart-item__price">
+                                                <FaRupeeSign className="rupee-icon" /> 
+                                                {formatPrice(item.book_price)}
+                                            </p>
+                                        </div>
+                                        <div className="cart-item__quantity">
+                                            <button 
+                                                onClick={() => handleDecrement(item.book, item.quantity)}
+                                                disabled={item.quantity <= 1}
+                                                className="quantity-btn"
+                                            >
+                                                <FaMinus className="icon" />
+                                            </button>
+                                            <span>{item.quantity}</span>
+                                            <button 
+                                                onClick={() => handleIncrement(item.book, item.quantity)}
+                                                className="quantity-btn"
+                                            >
+                                                <FaPlus className="icon" />
+                                            </button>
+                                        </div>
+                                        <div className="cart-item__subtotal">
+                                            <span className="label">Subtotal:</span>
+                                            <span className="amount">
+                                                <FaRupeeSign className="rupee-icon" /> 
+                                                {formatPrice(itemSubtotal)}
+                                            </span>
+                                        </div>
                                         <button 
-                                            onClick={() => handleDecrement(item.book, item.quantity)}
-                                            disabled={item.quantity <= 1}
-                                            className="quantity-btn"
+                                            className="cart-item__remove"
+                                            onClick={() => removeItem(item.book)}
+                                            aria-label="Remove item"
                                         >
-                                            <FaMinus className="icon" />
-                                        </button>
-                                        <span>{item.quantity}</span>
-                                        <button 
-                                            onClick={() => handleIncrement(item.book, item.quantity)}
-                                            className="quantity-btn"
-                                        >
-                                            <FaPlus className="icon" />
+                                            <FaTrashAlt className="icon" />
                                         </button>
                                     </div>
-                                    <div className="cart-item__subtotal">
-                                        <span className="label">Subtotal:</span>
-                                        <span className="amount">
-                                            Rs. {formatPrice(item.subtotal)}
-                                        </span>
-                                    </div>
-                                    <button 
-                                        className="cart-item__remove"
-                                        onClick={() => removeItem(item.book)}
-                                        aria-label="Remove item"
-                                    >
-                                        <FaTrashAlt className="icon" />
-                                    </button>
-                                </div>
-                            ))}
+                                );
+                            })}
                             <div className="cart__summary">
+                                {console.log('Cart Items for total:', cartItems)}
                                 <div className="cart__summary-details">
                                     <div className="summary-row">
                                         <span>Subtotal ({cartItems.length} items)</span>
-                                        <span>Rs. {formatPrice(cartItems.reduce((sum, item) => sum + item.subtotal, 0))}</span>
+                                        <span>
+                                            <FaRupeeSign className="rupee-icon" /> 
+                                            {formatPrice(debugTotal())}
+                                        </span>
                                     </div>
                                     <div className="summary-row">
                                         <span>Shipping</span>
@@ -211,7 +241,10 @@ const Cart = () => {
                                     </div>
                                     <div className="summary-row total">
                                         <span>Total</span>
-                                        <span>Rs. {formatPrice(cartItems.reduce((sum, item) => sum + item.subtotal, 0))}</span>
+                                        <span>
+                                            <FaRupeeSign className="rupee-icon" /> 
+                                            {formatPrice(debugTotal())}
+                                        </span>
                                     </div>
                                 </div>
                                 <button 

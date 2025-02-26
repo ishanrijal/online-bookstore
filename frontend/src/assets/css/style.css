@@ -715,7 +715,6 @@ body {
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
-  height: 500px;
   display: flex;
   flex-direction: column;
 }
@@ -1326,8 +1325,8 @@ body {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 .book-detail__header {
-  display: grid;
-  grid-template-columns: 300px 1fr;
+  display: flex;
+  justify-content: space-between;
   gap: 2rem;
   margin-bottom: 3rem;
 }
@@ -1382,8 +1381,8 @@ body {
   font-size: 0.9rem;
 }
 .book-detail__content {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 2rem;
 }
 .book-detail__description h2 {
@@ -1638,49 +1637,308 @@ body {
 }
 .home .section {
   margin-bottom: 4rem;
+  padding: 3rem 0;
 }
-.home .section:last-child {
-  margin-bottom: 0;
+.home .section:nth-child(even) {
+  background: rgba(0, 123, 255, 0.03);
 }
 .home .section-title {
-  font-size: 2rem;
+  font-size: 2.5rem;
   color: #333333;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
   text-align: center;
   position: relative;
+  font-weight: 600;
 }
 .home .section-title::after {
   content: "";
   display: block;
-  width: 60px;
-  height: 3px;
-  background: #007bff;
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(to right, #007bff, rgb(102, 175.8, 255));
   margin: 1rem auto 0;
+  border-radius: 2px;
+  transform: scaleX(0.7);
+  transition: transform 0.3s ease;
 }
-.home .category-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1.5rem;
+.home .section-title:hover::after {
+  transform: scaleX(1);
 }
-.home .category-grid .category-card {
+.home .category-slider {
+  padding: 2rem 0;
+}
+.home .category-slider .swiper-slide {
+  transition: transform 0.3s ease;
+}
+.home .category-slider .swiper-slide:hover {
+  transform: translateY(-5px);
+}
+.home .category-slider .category-card {
   background: white;
   padding: 2rem;
-  border-radius: 8px;
+  border-radius: 12px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
+  border: 1px solid rgba(0, 123, 255, 0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
-.home .category-grid .category-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.home .category-slider .category-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
+  border-color: #007bff;
 }
-.home .category-grid .category-card h3 {
+.home .category-slider .category-card h3 {
   color: #333333;
   margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
-.home .category-grid .category-card .book-count {
+.home .category-slider .category-card .book-count {
   color: #999999;
   font-size: 0.9rem;
+  display: block;
+  margin-top: 0.5rem;
+}
+.home .book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+}
+.home .book-grid.featured-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 768px) {
+  .home .book-grid.featured-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+.home .book-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+}
+.home .book-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
+}
+.home .book-card:hover .book-card__overlay {
+  opacity: 1;
+  visibility: visible;
+}
+.home .book-card__image {
+  position: relative;
+  overflow: hidden;
+}
+.home .book-card__image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+.home .book-card__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+.home .book-card__overlay .view-details,
+.home .book-card__overlay .add-to-cart,
+.home .book-card__overlay .view-cart {
+  background: white;
+  color: #333333;
+  padding: 0.8rem 1.5rem;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+.home .book-card__overlay .view-details:hover,
+.home .book-card__overlay .add-to-cart:hover,
+.home .book-card__overlay .view-cart:hover {
+  background: #007bff;
+  color: white;
+  transform: scale(1.05);
+}
+.home .book-card__overlay .view-details .icon,
+.home .book-card__overlay .add-to-cart .icon,
+.home .book-card__overlay .view-cart .icon {
+  font-size: 1.1rem;
+}
+.home .book-card__content {
+  padding: 1.5rem;
+}
+.home .book-card__content .book-card__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333333;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.home .book-card__content .book-card__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.home .book-card__content .book-card__meta .price {
+  font-weight: 600;
+  color: #007bff;
+  font-size: 1.1rem;
+}
+.home .book-card__content .book-card__meta .rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.home .book-card__content .book-card__meta .rating .stars {
+  color: #ffd700;
+}
+.home .book-card__content .book-card__meta .rating .count {
+  color: #999999;
+  font-size: 0.9rem;
+}
+.home .view-more-container {
+  text-align: center;
+  margin-top: 3rem;
+}
+.home .view-more-container .view-more-btn {
+  background: transparent;
+  color: #007bff;
+  border: 2px solid #007bff;
+  padding: 1rem 2rem;
+  border-radius: 25px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.home .view-more-container .view-more-btn:hover {
+  background: #007bff;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+.home .view-more-container .view-more-btn .icon {
+  transition: transform 0.3s ease;
+}
+.home .view-more-container .view-more-btn:hover .icon {
+  transform: translateX(5px);
+}
+.home .authors.section {
+  padding: 4rem 0;
+  background: #fff;
+}
+.home .authors.section .section-subtitle {
+  text-align: center;
+  color: #999999;
+  margin-bottom: 3rem;
+  font-size: 1.1rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.home .authors.section .authors-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 48px;
+  margin: 30px 0;
+  justify-content: center;
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 30px auto;
+}
+.home .authors.section .authors-grid .author-card {
+  text-align: center;
+  transition: transform 0.3s ease;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  flex: 0 0 auto;
+  width: 140px;
+}
+.home .authors.section .authors-grid .author-card:hover {
+  transform: translateY(-5px);
+}
+.home .authors.section .authors-grid .author-card:hover .author-image img, .home .authors.section .authors-grid .author-card:hover .author-image .default-avatar {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 123, 255, 0.2);
+}
+.home .authors.section .authors-grid .author-card .author-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.home .authors.section .authors-grid .author-card .author-image img, .home .authors.section .authors-grid .author-card .author-image .default-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+}
+.home .authors.section .authors-grid .author-card .author-image .default-avatar {
+  color: #007bff;
+  opacity: 0.7;
+  padding: 1rem;
+}
+.home .authors.section .authors-grid .author-card .author-name {
+  color: #333333;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+  transition: color 0.3s ease;
+}
+.home .authors.section .authors-grid .author-card .author-name:hover {
+  color: #007bff;
+}
+@media (max-width: 768px) {
+  .home .authors.section .authors-grid {
+    gap: 24px;
+  }
+  .home .authors.section .authors-grid .author-card {
+    width: 120px;
+  }
+  .home .authors.section .authors-grid .author-card .author-image {
+    width: 100px;
+    height: 100px;
+  }
+  .home .authors.section .authors-grid .author-card .author-name {
+    font-size: 0.9rem;
+  }
 }
 
 .modal-overlay {

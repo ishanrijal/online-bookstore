@@ -3,327 +3,356 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../../../utils/axios';
 import LoadingBox from '../../common/LoadingBox';
 import NotificationBox from '../../common/NotificationBox';
+import LoaderModal from '../../common/LoaderModal';
+import './AddBook.css';
 
 function AddBook() {
-    const [title, setTitle] = useState('');
-    const [isbn, setIsbn] = useState('');
-    const [price, setPrice] = useState('');
-    const [stock, setStock] = useState('');
-    const [description, setDescription] = useState('');
-    const [category, setCategory] = useState('');
-    const [language, setLanguage] = useState('English');
-    const [featured, setFeatured] = useState(false);
-    const [publicationDate, setPublicationDate] = useState('');
-    const [pageCount, setPageCount] = useState('');
-    const [dimensions, setDimensions] = useState('');
-    const [weight, setWeight] = useState('');
-    const [edition, setEdition] = useState('');
-    const [averageRating, setAverageRating] = useState('');
-    const [totalReviews, setTotalReviews] = useState('');
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        title: '',
+        isbn: '',
+        price: '',
+        stock: '',
+        description: '',
+        selectedCategories: [],
+        language: 'English',
+        featured: false,
+        publication_date: '',
+        page_count: '',
+        dimensions: '',
+        weight: '',
+        edition: '',
+        publisher: '',
+    });
+    
     const [coverImage, setCoverImage] = useState(null);
-    const [publisher, setPublisher] = useState('');
     const [publishers, setPublishers] = useState([]);
-    const [authors, setAuthors] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [notifications, setNotifications] = useState([]);
-
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        const fetchPublishers = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                const response = await axios.get('/publishers/', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                setPublishers(response.data);
-            } catch (error) {
-                console.error('Error fetching publishers:', error);
-            }
-        };
-        fetchPublishers();
-    }, []);
+    const [saving, setSaving] = useState(false);
+    const [notification, setNotification] = useState(null);
 
     useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                const response = await axios.get('/categories/', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                setCategories(response.data);
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-            }
-        };
-        fetchCategories();
+        fetchInitialData();
     }, []);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setNotifications([]);
-        
-        const formData = new FormData();
-        
-        formData.append('title', title);
-        formData.append('isbn', isbn);
-        formData.append('price', price);
-        formData.append('stock', stock);
-        formData.append('description', description);
-        formData.append('category', category);
-        formData.append('language', language);
-        formData.append('featured', featured);
-        formData.append('publication_date', publicationDate);
-        formData.append('page_count', pageCount);
-        formData.append('dimensions', dimensions);
-        formData.append('weight', weight);
-        formData.append('edition', edition);
-        formData.append('publisher', publisher);
-        
-        if (coverImage) {
-            formData.append('cover_image', coverImage);
-        }
-
+    const fetchInitialData = async () => {
         try {
-            await axios.post('/books/', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
-            
-            setNotifications([{
-                id: Date.now(),
-                message: 'Book added successfully',
-                type: 'success'
-            }]);
-
-            setTimeout(() => {
-                navigate('/admin/manage-books');
-            }, 2000);
+            setLoading(true);
+            const [publishersRes, categoriesRes] = await Promise.all([
+                axios.get('/publishers/'),
+                axios.get('/categories/')
+            ]);
+            setPublishers(publishersRes.data);
+            setCategories(categoriesRes.data);
         } catch (error) {
-            if (error.response?.data) {
-                const errors = error.response.data;
-                const errorMessages = [];
-                
-                Object.entries(errors).forEach(([field, messages]) => {
-                    if (Array.isArray(messages)) {
-                        messages.forEach(message => {
-                            errorMessages.push({
-                                id: Date.now() + Math.random(),
-                                message: `${field}: ${message}`,
-                                type: 'error'
-                            });
-                        });
-                    }
-                });
-                
-                setNotifications(errorMessages);
-            } else {
-                setNotifications([{
-                    id: Date.now(),
-                    message: 'Error adding book',
-                    type: 'error'
-                }]);
-            }
+            console.error('Error fetching initial data:', error);
+            showNotification('Failed to load required data', 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    if (loading) {
-        return <LoadingBox message="Adding new book..." />;
-    }
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
+    const handleCategoryChange = (categoryId) => {
+        setFormData(prev => ({
+            ...prev,
+            selectedCategories: prev.selectedCategories.includes(categoryId)
+                ? prev.selectedCategories.filter(id => id !== categoryId)
+                : [...prev.selectedCategories, categoryId]
+        }));
+    };
+
+    const showNotification = (message, type) => {
+        setNotification({ message, type });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+
+        try {
+            const formDataToSend = new FormData();
+            
+            // Append all form fields
+            Object.keys(formData).forEach(key => {
+                if (key === 'selectedCategories') {
+                    formData[key].forEach(categoryId => {
+                        formDataToSend.append('categories', categoryId);
+                    });
+                } else {
+                    formDataToSend.append(key, formData[key]);
+                }
+            });
+
+            // Append cover image if selected
+            if (coverImage) {
+                formDataToSend.append('cover_image', coverImage);
+            }
+
+            await axios.post('/books/', formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            showNotification('Book added successfully', 'success');
+            setTimeout(() => {
+                navigate('/admin/manage-books');
+            }, 1500);
+        } catch (error) {
+            console.error('Error adding book:', error);
+            const errorMessage = error.response?.data?.message || 'Failed to add book';
+            showNotification(errorMessage, 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) return <LoadingBox message="Loading..." />;
 
     return (
-        <div className="add-book">
-            <div className="notifications-container">
-                {notifications.map(notification => (
-                    <NotificationBox 
-                        key={notification.id}
-                        message={notification.message}
-                        type={notification.type}
-                        onClose={() => setNotifications(notifications.filter(n => n.id !== notification.id))}
-                    />
-                ))}
-            </div>
+        <div className="edit-book">
+            {notification && (
+                <NotificationBox 
+                    message={notification.message} 
+                    type={notification.type}
+                    onClose={() => setNotification(null)}
+                />
+            )}
+            {saving && <LoaderModal message="Adding book..." />}
             
-            <div className="add-book__header">
+            <div className="edit-book__header">
                 <h2>Add New Book</h2>
                 <button onClick={() => navigate('/admin/manage-books')} className="close-button">
                     ×
                 </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="add-book__form">
-                <fieldset>
+            <form onSubmit={handleSubmit} className="edit-book__form">
+                <div className="form-grid">
                     <div className="form-group">
-                        <label className="col-sm-2 control-label">Title</label>
-                        <div className="col-sm-10">
-                            <input name="title" className="form-control" type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
-                        </div>
+                        <label>Title *</label>
+                        <input
+                            type="text"
+                            name="title"
+                            value={formData.title}
+                            onChange={handleChange}
+                            required
+                            disabled={saving}
+                        />
                     </div>
 
                     <div className="form-group">
-                        <label className="col-sm-2 control-label">ISBN</label>
-                        <div className="col-sm-10">
-                            <input name="isbn" className="form-control" type="text" value={isbn} onChange={(e) => setIsbn(e.target.value)} required />
-                        </div>
+                        <label>ISBN *</label>
+                        <input
+                            type="text"
+                            name="isbn"
+                            value={formData.isbn}
+                            onChange={handleChange}
+                            required
+                            disabled={saving}
+                        />
                     </div>
 
                     <div className="form-group">
-                        <label className="col-sm-2 control-label">Price</label>
-                        <div className="col-sm-10">
-                            <input name="price" className="form-control" type="text" value={price} onChange={(e) => setPrice(e.target.value)} required />
-                        </div>
+                        <label>Price *</label>
+                        <input
+                            type="number"
+                            name="price"
+                            value={formData.price}
+                            onChange={handleChange}
+                            required
+                            disabled={saving}
+                            step="0.01"
+                        />
                     </div>
 
                     <div className="form-group">
-                        <label className="col-sm-2 control-label">Stock</label>
-                        <div className="col-sm-10">
-                            <input name="stock" className="form-control" type="number" value={stock} onChange={(e) => setStock(e.target.value)} required />
-                        </div>
+                        <label>Stock *</label>
+                        <input
+                            type="number"
+                            name="stock"
+                            value={formData.stock}
+                            onChange={handleChange}
+                            required
+                            disabled={saving}
+                        />
                     </div>
 
                     <div className="form-group">
-                        <label className="col-sm-2 control-label">Description</label>
-                        <div className="col-sm-10">
-                            <textarea name="description" className="form-control" value={description} onChange={(e) => setDescription(e.target.value)} required></textarea>
-                        </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label className="col-sm-2 control-label">Category</label>
-                        <div className="col-sm-10">
-                            <select
-                                className="form-control"
-                                name="category"
-                                value={category}
-                                onChange={(e) => setCategory(e.target.value)}
-                                required
-                            >
-                                <option value="">Select Category</option>
-                                {categories.map(category => (
-                                    <option key={category.id} value={category.id}>
+                        <label>Categories *</label>
+                        <div className="categories-checkbox-group">
+                            {categories.map(category => (
+                                <div key={category.id} className="category-checkbox">
+                                    <input
+                                        type="checkbox"
+                                        id={`category-${category.id}`}
+                                        checked={formData.selectedCategories.includes(category.id)}
+                                        onChange={() => handleCategoryChange(category.id)}
+                                        disabled={saving}
+                                    />
+                                    <label htmlFor={`category-${category.id}`}>
                                         {category.name}
-                                    </option>
-                                ))}
-                            </select>
+                                    </label>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
                     <div className="form-group">
-                        <label className="col-sm-2 control-label">Language</label>
-                        <div className="col-sm-10">
-                            <select className="form-control" name="language" value={language} onChange={(e) => setLanguage(e.target.value)}>
-                                <option value="English">English</option>
-                                <option value="Nepali">Nepali</option>
-                            </select>
+                        <label>Language *</label>
+                        <select
+                            name="language"
+                            value={formData.language}
+                            onChange={handleChange}
+                            required
+                            disabled={saving}
+                        >
+                            <option value="English">English</option>
+                            <option value="Nepali">Nepali</option>
+                        </select>
+                    </div>
+
+                    <div className="form-group">
+                        <label>Publisher *</label>
+                        <select
+                            name="publisher"
+                            value={formData.publisher}
+                            onChange={handleChange}
+                            required
+                            disabled={saving}
+                        >
+                            <option value="">Select Publisher</option>
+                            {publishers.map(pub => (
+                                <option key={pub.id} value={pub.id}>
+                                    {pub.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="form-group">
+                        <label>Featured</label>
+                        <div className="checkbox-wrapper">
+                            <input
+                                type="checkbox"
+                                name="featured"
+                                checked={formData.featured}
+                                onChange={handleChange}
+                                disabled={saving}
+                            />
                         </div>
                     </div>
 
                     <div className="form-group">
-                        <label className="col-sm-2 control-label">Featured</label>
-                        <div className="col-sm-10">
-                            <input type="checkbox" name="featured" checked={featured} onChange={(e) => setFeatured(e.target.checked)} />
-                        </div>
+                        <label>Publication Date *</label>
+                        <input
+                            type="date"
+                            name="publication_date"
+                            value={formData.publication_date}
+                            onChange={handleChange}
+                            required
+                            disabled={saving}
+                        />
                     </div>
 
                     <div className="form-group">
-                        <label className="col-sm-2 control-label">Publication Date</label>
-                        <div className="col-sm-10">
-                            <input name="publication_date" className="form-control" type="date" value={publicationDate} onChange={(e) => setPublicationDate(e.target.value)} required />
-                        </div>
+                        <label>Page Count *</label>
+                        <input
+                            type="number"
+                            name="page_count"
+                            value={formData.page_count}
+                            onChange={handleChange}
+                            required
+                            disabled={saving}
+                        />
                     </div>
 
                     <div className="form-group">
-                        <label className="col-sm-2 control-label">Page Count</label>
-                        <div className="col-sm-10">
-                            <input name="page_count" className="form-control" type="number" value={pageCount} onChange={(e) => setPageCount(e.target.value)} required />
-                        </div>
+                        <label>Dimensions</label>
+                        <input
+                            type="text"
+                            name="dimensions"
+                            value={formData.dimensions}
+                            onChange={handleChange}
+                            placeholder="e.g., 5.5 x 8.5 inches"
+                            disabled={saving}
+                        />
                     </div>
 
                     <div className="form-group">
-                        <label className="col-sm-2 control-label">Dimensions</label>
-                        <div className="col-sm-10">
-                            <input name="dimensions" className="form-control" type="text" value={dimensions} onChange={(e) => setDimensions(e.target.value)} required />
-                        </div>
+                        <label>Weight</label>
+                        <input
+                            type="text"
+                            name="weight"
+                            value={formData.weight}
+                            onChange={handleChange}
+                            placeholder="e.g., 500g"
+                            disabled={saving}
+                        />
                     </div>
 
                     <div className="form-group">
-                        <label className="col-sm-2 control-label">Weight</label>
-                        <div className="col-sm-10">
-                            <input name="weight" className="form-control" type="text" value={weight} onChange={(e) => setWeight(e.target.value)} required />
-                        </div>
+                        <label>Edition</label>
+                        <input
+                            type="text"
+                            name="edition"
+                            value={formData.edition}
+                            onChange={handleChange}
+                            placeholder="e.g., 1st Edition"
+                            disabled={saving}
+                        />
                     </div>
 
                     <div className="form-group">
-                        <label className="col-sm-2 control-label">Edition</label>
-                        <div className="col-sm-10">
-                            <input name="edition" className="form-control" type="text" value={edition} onChange={(e) => setEdition(e.target.value)} required />
-                        </div>
+                        <label>Description *</label>
+                        <textarea
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            required
+                            disabled={saving}
+                            rows="4"
+                        />
                     </div>
 
                     <div className="form-group">
-                        <label className="col-sm-2 control-label">Average Rating</label>
-                        <div className="col-sm-10">
-                            <input name="average_rating" className="form-control" type="text" value={averageRating} onChange={(e) => setAverageRating(e.target.value)} required />
-                        </div>
+                        <label>Cover Image</label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setCoverImage(e.target.files[0])}
+                            disabled={saving}
+                            className="file-input"
+                        />
                     </div>
+                </div>
 
-                    <div className="form-group">
-                        <label className="col-sm-2 control-label">Total Reviews</label>
-                        <div className="col-sm-10">
-                            <input name="total_reviews" className="form-control" type="number" value={totalReviews} onChange={(e) => setTotalReviews(e.target.value)} required />
-                        </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label className="col-sm-2 control-label">Cover Image</label>
-                        <div className="col-sm-10">
-                            <input name="cover_image" type="file" onChange={(e) => setCoverImage(e.target.files[0])} />
-                        </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label className="col-sm-2 control-label">Publisher</label>
-                        <div className="col-sm-10">
-                            <select
-                                className="form-control"
-                                name="publisher"
-                                value={publisher}
-                                onChange={(e) => setPublisher(e.target.value)}
-                                required
-                            >
-                                <option value="">Select Publisher</option>
-                                {publishers.map(pub => (
-                                    <option key={pub.id} value={pub.id}>
-                                        {pub.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label className="col-sm-2 control-label">Authors</label>
-                        <div className="col-sm-10">
-                            <select multiple className="form-control" name="authors" value={authors} onChange={(e) => setAuthors(Array.from(e.target.selectedOptions, option => option.value))}>
-                                <option value="1">admin</option>
-                                {/* Add more authors as needed */}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="form-actions">
-                        <button className="btn btn-primary" type="submit">Add Book</button>
-                    </div>
-                </fieldset>
+                <div className="form-actions">
+                    <button 
+                        type="button" 
+                        onClick={() => navigate('/admin/manage-books')}
+                        className="btn btn-secondary"
+                        disabled={saving}
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        type="submit" 
+                        className="submit-button"
+                        disabled={saving}
+                    >
+                        {saving ? 'Adding Book...' : 'Add Book'}
+                    </button>
+                </div>
             </form>
         </div>
     );

@@ -18,39 +18,73 @@ class PaymentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Payment.objects.filter(user=self.request.user)
+        user = self.request.user
+        if user.is_staff or user.role == 'Admin':
+            return Payment.objects.all()
+        return Payment.objects.filter(user=user)
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
         try:
-            # Get the order and verify it belongs to the user
-            order = Order.objects.get(
-                id=self.request.data.get('order'),
-                user=self.request.user,
-                status='PENDING'
-            )
+            # Get the order
+            order_id = request.data.get('order')
+            order = Order.objects.get(id=order_id)
             
-            # Create the payment
-            payment = serializer.save(
-                user=self.request.user,
-                amount=order.total_price,
-                status='PENDING'
-            )
-            
-            # If payment method is CASH, mark as completed
-            if self.request.data.get('payment_type') == 'CASH':
-                payment.status = 'COMPLETED'
-                payment.save()
+            # Check if payment already exists
+            existing_payment = Payment.objects.filter(order=order).first()
+            if existing_payment:
+                # Update existing payment
+                existing_payment.status = request.data.get('status', 'PENDING')
+                existing_payment.save()
                 
-                # Update order status
-                order.status = 'PAID'
+                # Update order status if payment is marked as PAID
+                if existing_payment.status == 'PAID' and order.status == 'Pending':
+                    order.status = 'Processing'
+                    order.save()
+                
+                serializer = self.get_serializer(existing_payment)
+                return Response(serializer.data)
+            
+            # Create new payment
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            payment = serializer.save()
+            
+            # Update order status if payment is marked as PAID
+            if payment.status == 'PAID' and order.status == 'Pending':
+                order.status = 'Processing'
                 order.save()
             
-            return payment
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
             
         except Order.DoesNotExist:
-            raise ValidationError({
-                'order': 'Invalid order or order does not belong to user'
-            })
+            return Response({
+                'message': 'Order not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        try:
+            payment = self.get_object()
+            
+            # Update payment status
+            payment.status = request.data.get('status', payment.status)
+            payment.save()
+            
+            # Update order status if payment is marked as PAID
+            if payment.status == 'PAID' and payment.order.status == 'Pending':
+                payment.order.status = 'Processing'
+                payment.order.save()
+            
+            serializer = self.get_serializer(payment)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            return Response({
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'])
     def verify_esewa(self, request, pk=None):
@@ -153,3 +187,64 @@ class PaymentViewSet(viewsets.ModelViewSet):
         payment.order.save()
         
         return Response({'status': 'Payment verified'})
+
+    @action(detail=True, methods=['patch'])
+    def update_status(self, request, pk=None):
+        try:
+            order = Order.objects.get(id=pk)
+            payment = Payment.objects.filter(order=order).first()
+            
+            # Create payment if it doesn't exist
+            if not payment:
+                payment = Payment.objects.create(
+                    order=order,
+                    user=order.user,
+                    amount=order.total_price,
+                    payment_type='CASH'  # Default to cash payment
+                )
+            
+            # Update payment status
+            new_status = request.data.get('status')
+            if new_status in ['PENDING', 'PAID', 'FAILED']:
+                payment.status = new_status
+                payment.save()
+                
+                # If payment is marked as PAID, update order status to Processing
+                if new_status == 'PAID' and order.status == 'Pending':
+                    order.status = 'Processing'
+                    order.save()
+                
+                return Response({
+                    'message': f'Payment status updated to {new_status}',
+                    'status': payment.status,
+                    'order_status': order.status
+                })
+            else:
+                return Response({
+                    'message': 'Invalid payment status'
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Order.DoesNotExist:
+            return Response({
+                'message': 'Order not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                'message': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['get'])
+    def order(self, request):
+        order_id = request.query_params.get('order_id')
+        try:
+            payment = Payment.objects.get(order_id=order_id)
+            serializer = self.get_serializer(payment)
+            return Response(serializer.data)
+        except Payment.DoesNotExist:
+            return Response({
+                'message': 'Payment not found for this order'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                'message': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

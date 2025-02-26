@@ -1,0 +1,143 @@
+.book-detail {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.book-detail__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.back-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #f0f0f0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.back-button:hover {
+    background-color: #e0e0e0;
+}
+
+.edit-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #ffc107;
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.edit-button:hover {
+    background-color: #ffb300;
+}
+
+.book-detail__content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+}
+
+.book-detail__image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.cover-image {
+    max-width: 300px;
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.info-item {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.info-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.info-item h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.info-item p {
+    margin: 8px 0;
+    color: #666;
+}
+
+.info-item strong {
+    color: #333;
+}
+
+.categories-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.category-link {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.category-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.book-description {
+    white-space: pre-line;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .book-detail__image {
+        padding: 10px;
+    }
+
+    .cover-image {
+        max-width: 250px;
+    }
+} 

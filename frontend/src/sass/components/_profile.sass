@@ -36,39 +36,111 @@
         border-radius: 8px
         box-shadow: 0 2px 8px rgba(0,0,0,0.1)
 
+        .profile-picture-container
+            display: flex
+            flex-direction: column
+            align-items: center
+            gap: 1rem
+            margin-bottom: 2rem
+
         .profile-picture
+            position: relative
             width: 150px
             height: 150px
-            margin: 0 auto 2rem
-            position: relative
-
+            border-radius: 50%
+            overflow: hidden
+            border: 3px solid #e0e0e0
+            background: #f5f5f5
+            
             img
                 width: 100%
                 height: 100%
                 object-fit: cover
-                border-radius: 50%
 
             .avatar-placeholder
                 width: 100%
                 height: 100%
-                background: #007bff
-                color: white
                 display: flex
                 align-items: center
                 justify-content: center
                 font-size: 3rem
-                font-weight: bold
+                color: #666
+                background: #e0e0e0
                 text-transform: uppercase
-                border-radius: 50%
 
-            .profile-picture-input
-                position: absolute
-                bottom: 0
-                left: 50%
-                transform: translateX(-50%)
-                width: 100%
-                opacity: 0
+        .profile-picture-overlay
+            position: absolute
+            bottom: 0
+            left: 0
+            right: 0
+            background: rgba(0, 0, 0, 0.7)
+            padding: 0.5rem
+            display: flex
+            flex-direction: column
+            align-items: center
+            gap: 0.5rem
+
+            .update-picture-label
+                color: white
                 cursor: pointer
+                display: flex
+                align-items: center
+                gap: 0.5rem
+                font-size: 0.9rem
+                
+                &:hover
+                    color: #e0e0e0
+
+                i
+                    font-size: 1.2rem
+
+        .selected-file
+            background: rgba(255, 255, 255, 0.9)
+            padding: 0.5rem
+            border-radius: 4px
+            font-size: 0.8rem
+            display: flex
+            align-items: center
+            gap: 0.5rem
+            max-width: 90%
+            word-break: break-all
+
+            .remove-file-btn
+                background: none
+                border: none
+                color: #ff4444
+                cursor: pointer
+                padding: 0.2rem
+                display: flex
+                align-items: center
+                justify-content: center
+                
+                &:hover
+                    color: #cc0000
+
+        .profile-picture-actions
+            display: flex
+            justify-content: center
+            gap: 1rem
+
+            .remove-picture-btn
+                background: none
+                border: 1px solid #ff4444
+                color: #ff4444
+                padding: 0.5rem 1rem
+                border-radius: 4px
+                cursor: pointer
+                display: flex
+                align-items: center
+                gap: 0.5rem
+                font-size: 0.9rem
+                
+                &:hover
+                    background: #ff4444
+                    color: white
+
+                i
+                    font-size: 1rem
 
     .profile-form
         .form-grid

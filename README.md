@@ -25,7 +25,7 @@ A full-stack web application built with Django and React for managing an online 
     """
 2. Create a virtual environment using command:
     ```bash
-    python3 -m venv env
+    python -m venv env
 3. Activate the virtual env:
     ```bash
     For Linux/Mac: source env/bin/activate

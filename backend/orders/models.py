@@ -2,6 +2,9 @@ from django.db import models
 from users.models import User
 from books.models import Book
 from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class Order(models.Model):
     STATUS_CHOICES = [
@@ -126,3 +129,15 @@ class Invoice(models.Model):
 
     def __str__(self):
         return f"Invoice #{self.invoice_number}"
+
+class OrderHistory(models.Model):
+    order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='history')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    action = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.order.id} - {self.action} by {self.user.username}"

@@ -62,11 +62,10 @@ class Book(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
     description = models.TextField(null=True, blank=True)
-    category = models.ForeignKey(
+    categories = models.ManyToManyField(
         Category, 
-        on_delete=models.SET_DEFAULT,
-        default=1,
-        related_name='books'
+        related_name='books',
+        blank=True
     )
     language = models.CharField(max_length=20, choices=LANGUAGE_CHOICES, default='English')
     
@@ -105,6 +104,8 @@ class Book(models.Model):
             self.save()
 
     def save(self, *args, **kwargs):
-        if not self.category_id:
-            self.category_id = Category.get_default_category()
         super().save(*args, **kwargs)
+        # Add default category if no categories are set
+        if not self.categories.exists():
+            default_category = Category.get_default_category()
+            self.categories.add(default_category)
