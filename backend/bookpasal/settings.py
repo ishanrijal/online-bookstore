@@ -68,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'users.middleware.EmailVerificationMiddleware',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -207,17 +208,15 @@ SIMPLE_JWT = {
 }
 
 # Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # This will print emails to console
-
-# Comment out all SMTP settings for now
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your-app-password'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'ishanrijal6@gmail.com'
+EMAIL_HOST_PASSWORD = 'amnl vcvo rysg cokq'
 
 # For development
-DUMMY_TOKEN = "dummy_token_for_development"
+# DUMMY_TOKEN = "dummy_token_for_development"
 
 AUTHENTICATION_BACKENDS = [
     'users.backends.EmailOrUsernameModelBackend',

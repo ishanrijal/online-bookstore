@@ -272,3 +272,7 @@ api/reviews/
 api/token/ [name='token_obtain_pair']
 api/token/refresh/ [name='token_refresh']
 ^media/(?P<path>.*)$
+
+
+App Password:
+amnl vcvo rysg cokq

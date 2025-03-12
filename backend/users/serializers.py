@@ -35,7 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
             phone=validated_data.get('phone', ''),
             address=validated_data.get('address', ''),
             profile_picture=validated_data.get('profile_picture', None),
-            is_email_verified=True
+            is_email_verified=False
         )
         return user
 

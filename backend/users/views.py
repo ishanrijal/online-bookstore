@@ -14,8 +14,13 @@ from .serializers import (UserSerializer, CustomTokenObtainPairSerializer,
 from .permissions import IsAdminOrPublisher, IsOwnerOrReadOnly
 from django.db.models import Q
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from datetime import timedelta
+from django.utils import timezone
+import logging
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username = serializers.CharField()
@@ -50,6 +55,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 'error': 'Invalid password'
             })
 
+        # Remove email verification check here - let them log in
         attrs['username'] = user.username
         return super().validate(attrs)
 
@@ -126,18 +132,14 @@ class UserViewSet(viewsets.ModelViewSet):
                           status=status.HTTP_400_BAD_REQUEST)
 
     def perform_create(self, serializer):
-        user = serializer.save()
-        token = EmailVerificationToken.objects.create(user=user)
-        
-        # Send verification email
-        verification_url = f"http://localhost:3000/verify-email?token={token.token}"
-        send_mail(
-            'Verify your email',
-            f'Click this link to verify your email: {verification_url}',
-            settings.EMAIL_HOST_USER,
-            [user.email],
-            fail_silently=False,
-        )
+        try:
+            # Save the user first
+            user = serializer.save()
+            logger.info(f'User created successfully: {user.email}')
+            return user
+        except Exception as e:
+            logger.error(f'Error in user registration: {str(e)}')
+            raise
 
     @action(detail=False, methods=['get'])
     def me(self, request):
@@ -146,8 +148,21 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def reset_password(self, request):
-        # Implement password reset logic here
-        return Response({'detail': 'Password reset email sent.'})
+        email = request.data.get('email')
+        try:
+            user = User.objects.get(email=email)
+            token = EmailVerificationToken.objects.create(user=user)
+            reset_url = f"http://localhost:3000/reset-password?token={token.token}"
+            send_mail(
+                'Reset your password',
+                f'Click this link to reset your password: {reset_url}',
+                settings.EMAIL_HOST_USER,
+                [user.email],
+                fail_silently=False,
+            )
+            return Response({'message': 'Password reset email sent.'})
+        except User.DoesNotExist:
+            return Response({'error': 'No user found with this email'}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'])
     def admin_reset_password(self, request, pk=None):
@@ -180,10 +195,123 @@ class UserViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        user = self.perform_create(serializer)
         
-        # Return the response directly without verification
+        # Generate verification code and send email
+        try:
+            # Delete any existing tokens
+            EmailVerificationToken.objects.filter(user=user).delete()
+            
+            # Create new verification token
+            token = EmailVerificationToken.objects.create(user=user)
+            verification_code = token.token.hex[:6]
+            
+            # Create verification URL and email content
+            verification_url = f"http://localhost:3000/verify-email?token={token.token}"
+            email_subject = 'Verify your email to access BookPasal'
+            email_body = f'''
+            Welcome to BookPasal!
+            
+            Your verification code is: {verification_code}
+            
+            Or click this link to verify your email: {verification_url}
+            
+            This code will expire in 30 seconds.
+            '''
+            
+            # Send verification email
+            send_mail(
+                email_subject,
+                email_body,
+                settings.EMAIL_HOST_USER,
+                [user.email],
+                fail_silently=False,
+            )
+            logger.info(f'Verification email sent successfully to {user.email}')
+            
+        except Exception as e:
+            logger.error(f'Failed to send verification email to {user.email}: {str(e)}')
+            # Continue even if email fails
+        
+        # Return the response with user data
         return Response({
             'user': UserSerializer(user).data,
             'message': 'User registered successfully'
         }, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'])
+    def verify_code(self, request):
+        code = request.data.get('code', '').strip()
+        if not code:
+            return Response({'error': 'Verification code is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            logger.info(f'Attempting to verify code: {code}')
+            
+            # Get the most recent token that matches the code (first 6 characters)
+            verification = EmailVerificationToken.objects.filter(
+                token__startswith=code
+            ).latest('created_at')
+            
+            logger.info(f'Found verification token for user: {verification.user.email}')
+
+            if verification.is_expired():
+                verification.delete()
+                logger.warning(f'Verification code expired for user: {verification.user.email}')
+                return Response({
+                    'error': 'Verification code has expired',
+                    'is_email_verified': False
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Verify the user
+            user = verification.user
+            user.is_email_verified = True
+            user.save()
+            
+            logger.info(f'Successfully verified email for user: {user.email}')
+
+            # Delete the verification token
+            verification.delete()
+
+            # Return success with user data
+            serializer = UserSerializer(user)
+            return Response({
+                'message': 'Email verified successfully',
+                'is_email_verified': True,
+                'user': serializer.data
+            }, status=status.HTTP_200_OK)
+
+        except EmailVerificationToken.DoesNotExist:
+            logger.warning(f'Invalid verification code attempt: {code}')
+            return Response({
+                'error': 'Invalid verification code',
+                'is_email_verified': False
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f'Error during email verification: {str(e)}')
+            return Response({
+                'error': 'An error occurred during verification',
+                'is_email_verified': False
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'])
+    def regenerate_code(self, request):
+        email = request.data.get('email')
+        try:
+            user = User.objects.get(email=email)
+            # Delete all existing tokens for the user
+            EmailVerificationToken.objects.filter(user=user).delete()
+            # Create a new token
+            new_token = EmailVerificationToken.objects.create(user=user)
+            verification_code = new_token.token.hex[:6]
+            verification_url = f"http://localhost:3000/verify-email?token={new_token.token}"
+            send_mail(
+                'New Verification Code',
+                f'Click this link to verify your email: {verification_url}\nOr enter this code: {verification_code}',
+                settings.EMAIL_HOST_USER,
+                [user.email],
+                fail_silently=False,
+            )
+            return Response({'message': 'New verification code sent.'})
+        except User.DoesNotExist:
+            return Response({'error': 'No user found with this email'}, status=status.HTTP_400_BAD_REQUEST)
