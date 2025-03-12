@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
-import axios from 'axios';
+import axios from '../utils/axios';
 import { useAuth } from '../context/AuthContext';
 import '../sass/components/_notificationBox.sass';
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
+    confirmPassword: '',
     role: 'Reader',
     first_name: '',
     last_name: '',
@@ -56,6 +57,10 @@ const Signup = () => {
 
     if (!formData.password.trim()) {
         newErrors.password = 'Password is required';
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
     }
 
     // Optional fields validation (only if they have a value)
@@ -118,26 +123,46 @@ const Signup = () => {
             }
         });
 
-        const response = await axios.post(
-            'http://127.0.0.1:8000/api/users/', 
-            submitData,
-            {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            }
-        );
+        // Register the user
+        const response = await axios.post('/users/', submitData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
 
         if (response.status === 201) {
+            // Log in the user
+            const loginResponse = await axios.post('/users/token/', {
+                username: formData.username,
+                password: formData.password
+            });
+
+            const accessToken = loginResponse.data.access;
+            const refreshToken = loginResponse.data.refresh;
+
+            // Store tokens
+            localStorage.setItem('access_token', accessToken);
+            localStorage.setItem('refresh_token', refreshToken);
+
+            // Set token in axios defaults
+            axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+
+            // Get user data
+            const userResponse = await axios.get('/users/me/');
+            const userData = userResponse.data;
+
+            // Update auth context
+            login(userData, accessToken);
+
             setNotification({
                 type: 'success',
-                message: 'Account created successfully! Redirecting...',
+                message: 'Account created successfully! Redirecting to email verification...',
                 details: null
             });
-            
-            // User can now log in immediately
+
+            // Redirect to email verification page with email
             setTimeout(() => {
-                navigate('/login');
+                navigate('/verify-email', { state: { email: formData.email } });
             }, 1500);
         }
     } catch (error) {
@@ -263,6 +288,18 @@ const Signup = () => {
                   />
                   <label htmlFor="password">Password</label>
                   {errors.password && <p className="error">{errors.password}</p>}
+                </div>
+
+                <div className="input-field">
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                  />
+                  <label htmlFor="confirmPassword">Confirm Password</label>
+                  {errors.confirmPassword && <p className="error">{errors.confirmPassword}</p>}
                 </div>
 
                 <div className="input-field">

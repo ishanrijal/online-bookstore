@@ -70,8 +70,32 @@ const Login = () => {
                 message: 'Login successful! Redirecting...'
             });
 
-            // Navigate based on role
-            if (userData.role === 'ADMIN') {
+            // Check if email is verified and handle navigation
+            if (!userData.is_email_verified) {
+                try {
+                    // Send verification email
+                    await axios.post('/users/regenerate_code/', { 
+                        email: userData.email 
+                    });
+                    
+                    setNotification({
+                        type: 'warning',
+                        message: 'Please verify your email. Verification code has been sent.'
+                    });
+                } catch (emailError) {
+                    console.error('Error sending verification email:', emailError);
+                    setNotification({
+                        type: 'warning',
+                        message: 'Please verify your email. Click resend code if you haven\'t received it.'
+                    });
+                }
+                
+                setTimeout(() => navigate('/verify-email', { state: { email: userData.email } }), 1500);
+                return;
+            }
+
+            // Navigate based on role for verified users
+            if (userData.role === 'Admin') {
                 navigate('/admin');
             } else {
                 navigate('/dashboard');
@@ -93,6 +117,19 @@ const Login = () => {
             });
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleForgotPassword = async (e) => {
+        e.preventDefault();
+        const email = prompt('Please enter your email for password reset:');
+        if (email) {
+            try {
+                await axios.post('/users/reset_password/', { email });
+                setNotification({ type: 'success', message: 'Password reset email sent. Please check your inbox.' });
+            } catch (error) {
+                setNotification({ type: 'error', message: 'Error sending password reset email. Please try again.' });
+            }
         }
     };
 
@@ -155,6 +192,13 @@ const Login = () => {
                                     ) : (
                                         'Login'
                                     )}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn-link"
+                                    onClick={handleForgotPassword}
+                                >
+                                    Forgot Password?
                                 </button>
                             </div>
                         </form>

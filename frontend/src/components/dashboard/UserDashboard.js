@@ -27,9 +27,8 @@ const UserDashboard = () => {
                         <Route index element={<DashboardOverview />} />
                         <Route path="profile" element={<Profile />} />
                         <Route path="reviews" element={<UserReviews />} />
-                        
                         {/* Reader-specific routes */}
-                        {user?.role === 'READER' && (
+                        {user?.role === 'Reader' && (
                             <>
                                 <Route path="orders" element={<OrderHistory />} />
                                 <Route path="cart" element={<DashboardCart />} />

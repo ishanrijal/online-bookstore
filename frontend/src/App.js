@@ -1,6 +1,6 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
@@ -18,8 +18,24 @@ import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import PaymentSuccess from './components/PaymentSuccess';
 import PaymentFailure from './components/PaymentFailure';
+import VerifyEmail from './components/VerifyEmail';
 // import NotFound from './components/NotFound';
 import './assets/css/style.css';  // Import the compiled CSS
+
+// Create a new component for email verification check
+const EmailVerificationCheck = ({ children }) => {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!user.is_email_verified && window.location.pathname !== '/verify-email') {
+    return <Navigate to="/verify-email" />;
+  }
+
+  return children;
+};
 
 function App() {
   return (
@@ -36,37 +52,56 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/categories" element={<Categories />} />
 
-            {/* Protected User Routes */}
+            {/* Verify Email Route - only for logged in users */}
+            <Route path="/verify-email" element={
+              <ProtectedRoute>
+                <VerifyEmail />
+              </ProtectedRoute>
+            } />
+
+            {/* Protected User Routes with Email Verification Check */}
             <Route path="/dashboard/*" element={
               <ProtectedRoute roles={['READER']}>
-                <UserDashboard />
+                <EmailVerificationCheck>
+                  <UserDashboard />
+                </EmailVerificationCheck>
               </ProtectedRoute>
             } />
             <Route path="/cart" element={
               <ProtectedRoute roles={['READER']}>
-                <Cart />
+                <EmailVerificationCheck>
+                  <Cart />
+                </EmailVerificationCheck>
               </ProtectedRoute>
             } />
             <Route path="/checkout" element={
               <ProtectedRoute roles={['READER']}>
-                <Checkout />
+                <EmailVerificationCheck>
+                  <Checkout />
+                </EmailVerificationCheck>
               </ProtectedRoute>
             } />
             <Route path="/payment/success/:paymentId" element={
               <ProtectedRoute roles={['READER']}>
-                <PaymentSuccess />
+                <EmailVerificationCheck>
+                  <PaymentSuccess />
+                </EmailVerificationCheck>
               </ProtectedRoute>
             } />
             <Route path="/payment/failure/:paymentId" element={
               <ProtectedRoute roles={['READER']}>
-                <PaymentFailure />
+                <EmailVerificationCheck>
+                  <PaymentFailure />
+                </EmailVerificationCheck>
               </ProtectedRoute>
             } />
 
             {/* Protected Admin Routes */}
             <Route path="/admin/*" element={
               <ProtectedRoute roles={['ADMIN']}>
-                <AdminDashboard />
+                <EmailVerificationCheck>
+                  <AdminDashboard />
+                </EmailVerificationCheck>
               </ProtectedRoute>
             } />
 
