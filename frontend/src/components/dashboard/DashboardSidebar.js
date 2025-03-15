@@ -25,39 +25,39 @@ const DashboardSidebar = () => {
                 to: '/dashboard',
                 icon: <FaHome className="icon" />,
                 text: 'Dashboard',
-                roles: ['READER', 'Author', 'Publisher']
+                roles: ['Reader', 'Author', 'Publisher']
             },
             {
                 to: '/dashboard/profile',
                 icon: <FaUser className="icon" />,
                 text: 'Profile',
-                roles: ['READER', 'Author', 'Publisher']
+                roles: ['Reader', 'Author', 'Publisher']
             },
             {
                 to: '/dashboard/reviews',
                 icon: <FaStar className="icon" />,
                 text: 'My Reviews',
-                roles: ['READER', 'Publisher']
-                // roles: ['READER', 'Author', 'Publisher']
+                roles: ['Reader', 'Publisher']
+                // roles: ['Reader', 'Author', 'Publisher']
             },
             // Reader-specific items
             {
                 to: '/dashboard/orders',
                 icon: <FaShoppingBag className="icon" />,
                 text: 'My Orders',
-                roles: ['READER']
+                roles: ['Reader']
             },
             {
                 to: '/dashboard/wishlist',
                 icon: <FaHeart className="icon" />,
                 text: 'Wishlist',
-                roles: ['READER']
+                roles: ['Reader']
             },
             {
                 to: '/dashboard/cart',
                 icon: <FaShoppingCart className="icon" />,
                 text: 'My Cart',
-                roles: ['READER']
+                roles: ['Reader']
             },
             // Author/Publisher-specific items
             {

@@ -50,19 +50,24 @@ const DashboardOverview = () => {
                     }
                 });
 
-                console.log('Books Response:', booksResponse.data);
-                console.log('Recommendations:', recommendationsResponse.data);
-
-                // Calculate total books and sales from the books data
+                // Get reviews for author's books
                 const authorBooks = booksResponse.data.filter(book => 
                     book.authors.some(author => author.user === user.id)
                 );
+                
+                const bookIds = authorBooks.map(book => book.id);
+                const reviewsResponse = await axios.get('/reviews/reviews/', {
+                    params: {
+                        book__in: bookIds.join(',')
+                    }
+                });
 
                 const totalSales = authorBooks.reduce((total, book) => total + (book.sales_count || 0), 0);
 
                 setStats({
                     totalBooks: authorBooks.length,
-                    totalBooksSold: totalSales
+                    totalBooksSold: totalSales,
+                    totalReviews: reviewsResponse.data.length
                 });
 
                 // Set top 5 popular books
@@ -76,14 +81,34 @@ const DashboardOverview = () => {
                     average_rating: book.average_rating || 0
                 })));
 
+            } else if (user.role === 'Publisher') {
+                // Get publisher's books
+                const booksResponse = await axios.get('/books/', {
+                    params: {
+                        publisher: user.id
+                    }
+                });
+
+                // Get reviews for publisher's books
+                const publisherBooks = booksResponse.data;
+                const bookIds = publisherBooks.map(book => book.id);
+                const reviewsResponse = await axios.get('/reviews/reviews/', {
+                    params: {
+                        book__in: bookIds.join(',')
+                    }
+                });
+
+                setStats({
+                    totalBooks: publisherBooks.length,
+                    totalReviews: reviewsResponse.data.length
+                });
+
             } else {
-                // Regular user dashboard data fetching
+                // Regular user (Reader) dashboard data fetching
                 const [cartResponse, ordersRes, reviewsRes] = await Promise.all([
                     cartAPI.getCurrentCart(),
                     axios.get('/orders/orders/'),
-                    axios.get('/reviews/reviews/', {
-                        params: { user: user.id }
-                    })
+                    axios.get(`/reviews/reviews/user/${user.id}`)
                 ]);
 
                 setStats({

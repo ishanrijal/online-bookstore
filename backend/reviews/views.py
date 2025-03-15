@@ -16,7 +16,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         # Allow unauthenticated access to list, retrieve, and book_reviews actions
-        if self.action in ['list', 'retrieve', 'book_reviews']:
+        if self.action in ['list', 'retrieve', 'book_reviews', 'user_reviews']:
             permission_classes = [AllowAny]
         else:
             permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
@@ -24,6 +24,20 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['get'], url_path='user/(?P<user_id>[^/.]+)')
+    def user_reviews(self, request, user_id=None):
+        """
+        Retrieve all reviews for a specific user
+        """
+        if not user_id:
+            return Response(
+                {"error": "user_id parameter is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        reviews = Review.objects.filter(user_id=user_id)
+        serializer = self.get_serializer(reviews, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['patch'])
     def update_review(self, request, pk=None):

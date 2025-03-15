@@ -31,7 +31,7 @@ const UserReviews = () => {
 
     const fetchUserReviews = async () => {
         try {
-            let url = '/api/reviews/user-reviews/';  // Updated endpoint for user-specific reviews
+            let url = `/reviews/reviews/user/${user.id}`;
             const params = new URLSearchParams();
 
             if (filters.rating) {
@@ -70,6 +70,7 @@ const UserReviews = () => {
 
             const queryString = params.toString();
             const response = await axios.get(`${url}${queryString ? `?${queryString}` : ''}`);
+
             setReviews(response.data);
             setLoading(false);
         } catch (error) {
@@ -83,19 +84,11 @@ const UserReviews = () => {
     };
 
     const handleEditClick = (review) => {
-        // Only allow editing if the review belongs to the current user
-        if (review.user === user.id) {
-            setEditingReview(review.id);
-            setEditForm({
-                rating: review.rating,
-                comment: review.comment
-            });
-        } else {
-            setNotification({
-                type: 'error',
-                message: 'You can only edit your own reviews'
-            });
-        }
+        setEditingReview(review.id);
+        setEditForm({
+            rating: review.rating,
+            comment: review.comment
+        });
     };
 
     const handleCancelEdit = () => {
@@ -104,23 +97,15 @@ const UserReviews = () => {
     };
 
     const handleUpdateReview = async (reviewId) => {
-        if (!user) {
-            setNotification({
-                type: 'error',
-                message: 'Please log in to update reviews'
-            });
-            return;
-        }
-
         setSubmitting(true);
         try {
-            await axios.patch(`/api/reviews/reviews/${reviewId}/`, editForm);
+            await axios.patch(`/reviews/reviews/${reviewId}/`, editForm);
             setNotification({
                 type: 'success',
                 message: 'Review updated successfully'
             });
             setEditingReview(null);
-            fetchUserReviews();
+            fetchUserReviews(); // Refresh the reviews list
         } catch (error) {
             console.error('Error updating review:', error);
             setNotification({
@@ -133,26 +118,18 @@ const UserReviews = () => {
     };
 
     const handleDeleteReview = async (reviewId) => {
-        if (!user) {
-            setNotification({
-                type: 'error',
-                message: 'Please log in to delete reviews'
-            });
-            return;
-        }
-
         if (!window.confirm('Are you sure you want to delete this review?')) {
             return;
         }
 
         setSubmitting(true);
         try {
-            await axios.delete(`/api/reviews/reviews/${reviewId}/`);
+            await axios.delete(`/reviews/reviews/${reviewId}/`);
             setNotification({
                 type: 'success',
                 message: 'Review deleted successfully'
             });
-            fetchUserReviews();
+            fetchUserReviews(); // Refresh the reviews list
         } catch (error) {
             console.error('Error deleting review:', error);
             setNotification({
