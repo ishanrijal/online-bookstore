@@ -1,0 +1,14 @@
+.wishlist-btn{
+    background: white;
+    color: #333333;
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    display: flex
+;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}

@@ -1,42 +1,195 @@
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+.header {
+    background: white;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
-.user-menu {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
 }
 
-.dashboard-btn {
-    background-color: #007bff;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
+/* Top Header */
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.logo {
     text-decoration: none;
-    transition: background-color 0.2s;
 }
 
-.dashboard-btn:hover {
-    background-color: #0056b3;
+.site-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(45deg, #007bff, #00bcd4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
 }
 
-.logout-btn {
-    background-color: #dc3545;
-    color: white;
-    padding: 0.5rem 1rem;
+/* Bottom Header */
+.header-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+}
+
+.header-bottom-left {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+/* Menu Toggle Button */
+.menu-toggle {
+    display: none;
+    background: none;
     border: none;
-    border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    padding: 0.5rem;
 }
 
-.logout-btn:hover {
-    background-color: #c82333;
+.menu-icon {
+    font-size: 1.5rem;
+    color: #333;
 }
 
+/* Navigation */
+.navigation {
+    position: relative;
+}
+
+.nav-header {
+    display: none;
+}
+
+.navigation ul {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.navigation a {
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+    padding: 0.5rem 0;
+}
+
+.navigation a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(45deg, #007bff, #00bcd4);
+    transition: width 0.3s ease;
+}
+
+.navigation a:hover {
+    color: #007bff;
+}
+
+.navigation a:hover::after {
+    width: 100%;
+}
+
+/* Shop Actions */
+.header-shop-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.shop-icon-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.action-icon {
+    font-size: 1.5rem;
+    transition: transform 0.3s ease;
+}
+
+/* Wishlist specific styles */
+.wishlist-icon {
+    background: rgba(255, 77, 77, 0.1);
+}
+
+.wishlist-icon .action-icon {
+    color: #ff4d4d;
+}
+
+.wishlist-icon:hover {
+    background: rgba(255, 77, 77, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 77, 77, 0.15);
+}
+
+/* Cart specific styles */
+.cart-icon {
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.cart-icon .action-icon {
+    color: #28a745;
+}
+
+.cart-icon:hover {
+    background: rgba(40, 167, 69, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.15);
+}
+
+/* Count badge styles */
+.shop-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 11px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.wishlist-count {
+    background: linear-gradient(45deg, #ff4d4d, #ff6b6b);
+    color: white;
+}
+
+.cart-count {
+    background: linear-gradient(45deg, #28a745, #34ce57);
+    color: white;
+}
+
+/* Auth Buttons */
 .auth-buttons {
     display: flex;
     gap: 1rem;
@@ -44,27 +197,183 @@
 
 .login-btn,
 .register-btn {
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     text-decoration: none;
-    transition: all 0.2s;
 }
 
 .login-btn {
-    background-color: #007bff;
+    background: linear-gradient(45deg, #007bff, #0056b3);
     color: white;
-}
-
-.login-btn:hover {
-    background-color: #0056b3;
+    border: none;
 }
 
 .register-btn {
-    border: 1px solid #007bff;
+    background: white;
     color: #007bff;
+    border: 2px solid #007bff;
 }
 
-.register-btn:hover {
-    background-color: #007bff;
+.dashboard-btn {
+    background: linear-gradient(45deg, #007bff, #0056b3);
     color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.logout-btn {
+    background: white;
+    color: #dc3545;
+    border: 2px solid #dc3545;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Mobile Styles */
+.mobile-only {
+    display: none;
+}
+
+.mobile-logout {
+    background: none;
+    border: none;
+    color: #dc3545;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.5rem 0;
+}
+
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none;
+    }
+
+    .mobile-only {
+        display: block;
+    }
+
+    .menu-toggle {
+        display: block;
+    }
+
+    .navigation {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 80%;
+        height: 100vh;
+        background: white;
+        transition: left 0.3s ease;
+        z-index: 1000;
+        overflow-y: auto;
+    }
+
+    .nav-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        background: #f8f9fa;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .nav-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .nav-close {
+        background: none;
+        border: none;
+        padding: 0.5rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        transition: all 0.3s ease;
+    }
+
+    .close-icon {
+        font-size: 1.4rem;
+    }
+
+    .nav-close:hover {
+        color: #dc3545;
+        transform: rotate(90deg);
+    }
+
+    .navigation.active {
+        left: 0;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .navigation ul {
+        flex-direction: column;
+        gap: 0;
+        padding: 1rem;
+    }
+
+    .navigation li {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .navigation li:last-child {
+        border-bottom: none;
+    }
+
+    .navigation a {
+        display: block;
+        padding: 1rem 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    .navigation a::after {
+        display: none;
+    }
+
+    .mobile-logout {
+        width: 100%;
+        text-align: left;
+        padding: 1rem 0.5rem;
+        font-size: 1.1rem;
+        color: #dc3545;
+        border-bottom: none;
+    }
+
+    .shop-icon-button {
+        width: 42px;
+        height: 42px;
+    }
+
+    .action-icon {
+        font-size: 1.4rem;
+    }
+
+    .header-shop-actions {
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .site-title {
+        font-size: 1.5rem;
+    }
+
+    .login-btn,
+    .dashboard-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
 } 

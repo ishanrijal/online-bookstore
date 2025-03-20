@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios, { cartAPI } from '../utils/axios';
+import axios, { cartAPI, wishlistAPI } from '../utils/axios';
 import '../assets/css/style.css';
+import './Home.css';
 import Header from './Header';
 import Banner from './Banner';
 import Footer from './Footer';
-import { FaShoppingCart, FaInfoCircle, FaShoppingBag, FaArrowRight, FaUserCircle } from 'react-icons/fa';
+import { FaShoppingCart, FaInfoCircle, FaShoppingBag, FaArrowRight, FaUserCircle, FaHeart } from 'react-icons/fa';
 import NotificationBox from './common/NotificationBox';
 import { useAuth } from '../context/AuthContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -13,9 +14,13 @@ import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import { useWishlist } from '../context/WishlistContext';
+import { useCart } from '../context/CartContext';
 
 function Home() {
     const { user } = useAuth();
+    const { refreshWishlistCount } = useWishlist();
+    const { refreshCartCount } = useCart();
     const [books, setBooks] = useState([]);
     const [categories, setCategories] = useState([]);
     const [featuredBooks, setFeaturedBooks] = useState([]);
@@ -26,6 +31,7 @@ function Home() {
     const [visibleBooks, setVisibleBooks] = useState(6);
     const navigate = useNavigate();
     const [authorDetails, setAuthorDetails] = useState({});
+    const [wishlistItems, setWishlistItems] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -40,6 +46,12 @@ function Home() {
                 setBooks(allBooks);
                 setCategories(categoriesRes.data);
                 setFeaturedBooks(allBooks.filter(book => book.featured).slice(0, 3));
+
+                // Fetch wishlist items if user is logged in
+                if (user) {
+                    const wishlistRes = await wishlistAPI.getWishlist();
+                    setWishlistItems(wishlistRes.data.map(item => item.book));
+                }
 
                 // Fetch detailed author information
                 const authorsData = authorsRes.data;
@@ -91,6 +103,10 @@ function Home() {
         return cartItems.some(item => item.book === bookId);
     };
 
+    const isInWishlist = (bookId) => {
+        return wishlistItems.includes(bookId);
+    };
+
     const handleAddToCart = async (bookId) => {
         if (!user) {
             navigate('/login');
@@ -100,6 +116,7 @@ function Home() {
         try {
             await cartAPI.addToCart(bookId, 1);
             await fetchCartItems();
+            await refreshCartCount();
             
             setNotification({
                 type: 'success',
@@ -122,6 +139,40 @@ function Home() {
         }
     };
 
+    const handleAddToWishlist = async (bookId) => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
+        try {
+            if (isInWishlist(bookId)) {
+                const wishlistItem = wishlistItems.find(item => item.book === bookId);
+                await wishlistAPI.removeFromWishlist(wishlistItem.id);
+                setWishlistItems(prev => prev.filter(id => id !== bookId));
+                await refreshWishlistCount();
+                setNotification({
+                    type: 'success',
+                    message: 'Removed from wishlist!'
+                });
+            } else {
+                await wishlistAPI.addToWishlist(bookId);
+                setWishlistItems(prev => [...prev, bookId]);
+                await refreshWishlistCount();
+                setNotification({
+                    type: 'success',
+                    message: 'Added to wishlist!'
+                });
+            }
+        } catch (error) {
+            console.error('Error updating wishlist:', error);
+            setNotification({
+                type: 'error',
+                message: 'Failed to update wishlist'
+            });
+        }
+    };
+
     const BookCard = ({ book }) => (
         <div className="book-card">
             <div className="book-card__image">
@@ -131,33 +182,54 @@ function Home() {
                     loading="lazy"
                 />
                 <div className="book-card__overlay">
-                    <Link 
-                        to={`/book/${book.id}`} 
-                        className="view-details"
-                    >
-                        <FaInfoCircle className="icon" />
-                        <span>View Details</span>
-                    </Link>
                     {user?.role === 'Reader' && (
-                        isInCart(book.id) ? (
-                            <Link to="/cart" className="view-cart">
-                                <FaShoppingBag className="icon" />
-                                <span>View Cart</span>
-                            </Link>
-                        ) : (
-                            <button 
-                                className="add-to-cart"
-                                onClick={() => handleAddToCart(book.id)}
-                            >
-                                <FaShoppingCart className="icon" />
-                                <span>Add to Cart</span>
-                            </button>
-                        )
+                        <div className="action-buttons">
+                            {isInCart(book.id) ? (
+                                <>
+                                    <div className="status-message cart-status">
+                                        Product is in Cart
+                                    </div>
+                                    <Link to="/cart" className="view-cart-btn">
+                                        <FaShoppingBag className="icon" />
+                                        <span>View Cart</span>
+                                    </Link>
+                                </>
+                            ) : isInWishlist(book.id) ? (
+                                <>
+                                    <div className="status-message wishlist-status">
+                                        Product is in Wishlist
+                                    </div>
+                                    <Link to="/dashboard/wishlist" className="view-wishlist-btn">
+                                        <FaHeart className="icon" />
+                                        <span>View Wishlist</span>
+                                    </Link>
+                                </>
+                            ) : (
+                                <>
+                                    <button 
+                                        onClick={() => handleAddToWishlist(book.id)}
+                                        className="wishlist-btn"
+                                    >
+                                        <FaHeart className="icon" />
+                                        <span>Add to Wishlist</span>
+                                    </button>
+                                    <button 
+                                        className="add-to-cart"
+                                        onClick={() => handleAddToCart(book.id)}
+                                    >
+                                        <FaShoppingCart className="icon" />
+                                        <span>Add to Cart</span>
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>
             <div className="book-card__content">
-                <h3 className="book-card__title">{book.title}</h3>
+                <Link to={`/book/${book.id}`} className="book-card__title">
+                    <h3>{book.title}</h3>
+                </Link>
                 <div className="book-card__meta">
                     <span className="price">Rs.{book.price}</span>
                     <div className="rating">

@@ -114,5 +114,20 @@ const categoryAPI = {
     getBooksByCategory: (slug) => instance.get(`/books/by_category/?category=${slug}`)
 };
 
+export const wishlistAPI = {
+    getWishlist: () => instance.get('/reviews/wishlist/my_wishlist/'),
+    addToWishlist: (bookId) => instance.post('/reviews/wishlist/', { book: bookId }),
+    removeFromWishlist: (wishlistId) => instance.delete(`/reviews/wishlist/${wishlistId}/`),
+    checkInWishlist: async (bookId) => {
+        try {
+            const response = await instance.get('/reviews/wishlist/my_wishlist/');
+            return response.data.some(item => item.book === bookId);
+        } catch (error) {
+            console.error('Error checking wishlist:', error);
+            return false;
+        }
+    }
+};
+
 export { cartAPI, categoryAPI };
 export default instance; 

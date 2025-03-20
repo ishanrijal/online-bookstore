@@ -11,6 +11,7 @@ import UserReviews from './UserReviews';
 import DashboardCart from './DashboardCart';
 import ManageUserBooks from './ManageUserBooks';
 import BookForm from './BookForm';
+import Wishlist from './Wishlist';
 import '../../sass/components/_dashboard.sass';
 import './UserDashboard.css';
 
@@ -32,6 +33,7 @@ const UserDashboard = () => {
                             <>
                                 <Route path="orders" element={<OrderHistory />} />
                                 <Route path="cart" element={<DashboardCart />} />
+                                <Route path="wishlist" element={<Wishlist />} />
                             </>
                         )}
 

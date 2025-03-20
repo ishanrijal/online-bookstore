@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { cartAPI } from '../utils/axios';
 import { useAuth } from './AuthContext';
 
@@ -8,6 +8,7 @@ export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
+    const [cartCount, setCartCount] = useState(0);
 
     const fetchCart = async () => {
         if (user) {
@@ -69,6 +70,19 @@ export const CartProvider = ({ children }) => {
         }
     };
 
+    const refreshCartCount = useCallback(async () => {
+        try {
+            const cartRes = await cartAPI.getCurrentCart();
+            setCartCount(cartRes.data.items.length || 0);
+        } catch (error) {
+            console.error('Error refreshing cart count:', error);
+        }
+    }, []);
+
+    const updateCartCount = (count) => {
+        setCartCount(count);
+    };
+
     return (
         <CartContext.Provider 
             value={{ 
@@ -77,7 +91,10 @@ export const CartProvider = ({ children }) => {
                 updateCartItem, 
                 removeCartItem, 
                 addToCart,
-                refreshCart: fetchCart 
+                refreshCart: fetchCart,
+                cartCount,
+                updateCartCount,
+                refreshCartCount
             }}
         >
             {children}

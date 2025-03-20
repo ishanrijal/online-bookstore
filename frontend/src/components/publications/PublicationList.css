@@ -1,0 +1,140 @@
+.publications-page {
+    padding: 2rem 0;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.publications-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.publication-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+}
+
+.publication-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
+}
+
+.publication-card__image {
+    position: relative;
+    padding-top: 60%;
+    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+}
+
+.publication-card__image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 1rem;
+    transition: transform 0.5s ease;
+}
+
+.default-logo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: #007bff;
+}
+
+.publication-card:hover .publication-card__image img {
+    transform: scale(1.1);
+}
+
+.publication-card__content {
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.publication-card__content h3 {
+    color: #333;
+    font-size: 1.25rem;
+    margin: 0 0 1rem;
+    line-height: 1.4;
+    transition: color 0.3s ease;
+}
+
+.publication-card:hover .publication-card__content h3 {
+    color: #007bff;
+}
+
+.description {
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0 0 1.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+}
+
+.publication-card__meta {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.books-count {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #007bff;
+    font-size: 0.95rem;
+}
+
+.books-count svg {
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .publications-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .publications-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .publication-card__content h3 {
+        font-size: 1.1rem;
+    }
+
+    .description {
+        font-size: 0.9rem;
+        -webkit-line-clamp: 2;
+    }
+} 
